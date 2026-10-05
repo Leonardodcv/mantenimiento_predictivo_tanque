@@ -1,0 +1,198 @@
+[
+  {
+    "variable": "flujo_instantaneo",
+    "rol": "PREDICTORA",
+    "nota": "ML y respuesta hidraulica",
+    "registros_con_valor": 5803,
+    "cobertura_pct": 100.0
+  },
+  {
+    "variable": "presion_relativa",
+    "rol": "PREDICTORA",
+    "nota": "ML y respuesta hidraulica",
+    "registros_con_valor": 5803,
+    "cobertura_pct": 100.0
+  },
+  {
+    "variable": "temperatura_tanque",
+    "rol": "PREDICTORA",
+    "nota": "ML",
+    "registros_con_valor": 5803,
+    "cobertura_pct": 100.0
+  },
+  {
+    "variable": "nivel_tanque",
+    "rol": "PREDICTORA",
+    "nota": "ML y ciclos",
+    "registros_con_valor": 5803,
+    "cobertura_pct": 100.0
+  },
+  {
+    "variable": "frecuencia_salida",
+    "rol": "PREDICTORA",
+    "nota": "ML",
+    "registros_con_valor": 5803,
+    "cobertura_pct": 100.0
+  },
+  {
+    "variable": "velocidad",
+    "rol": "PREDICTORA",
+    "nota": "ML, movimiento y ciclos",
+    "registros_con_valor": 5803,
+    "cobertura_pct": 100.0
+  },
+  {
+    "variable": "voltaje_salida",
+    "rol": "PREDICTORA",
+    "nota": "ML y movimiento",
+    "registros_con_valor": 5803,
+    "cobertura_pct": 100.0
+  },
+  {
+    "variable": "corriente_l1",
+    "rol": "PREDICTORA",
+    "nota": "ML electrico",
+    "registros_con_valor": 5803,
+    "cobertura_pct": 100.0
+  },
+  {
+    "variable": "potencia_activa_l1",
+    "rol": "PREDICTORA",
+    "nota": "ML electrico",
+    "registros_con_valor": 5803,
+    "cobertura_pct": 100.0
+  },
+  {
+    "variable": "potencia_aparente_l1",
+    "rol": "PREDICTORA",
+    "nota": "ML electrico",
+    "registros_con_valor": 5803,
+    "cobertura_pct": 100.0
+  },
+  {
+    "variable": "presion_alta",
+    "rol": "ADVERTENCIA",
+    "nota": "primer umbral de advertencia",
+    "registros_con_valor": 5803,
+    "cobertura_pct": 100.0
+  },
+  {
+    "variable": "falta_presion",
+    "rol": "REGLA",
+    "nota": "desviacion si persiste tras arranque",
+    "registros_con_valor": 5803,
+    "cobertura_pct": 100.0
+  },
+  {
+    "variable": "bajo_flujo",
+    "rol": "REGLA",
+    "nota": "desviacion si persiste tras arranque",
+    "registros_con_valor": 5803,
+    "cobertura_pct": 100.0
+  },
+  {
+    "variable": "falla_vfd",
+    "rol": "REGLA",
+    "nota": "falla explicita",
+    "registros_con_valor": 5803,
+    "cobertura_pct": 100.0
+  },
+  {
+    "variable": "estado_vfd",
+    "rol": "CONTEXTO",
+    "nota": "estado del VFD",
+    "registros_con_valor": 5803,
+    "cobertura_pct": 100.0
+  },
+  {
+    "variable": "manual_auto_vfd",
+    "rol": "CONTEXTO",
+    "nota": "modo manual/automatico",
+    "registros_con_valor": 5803,
+    "cobertura_pct": 100.0
+  },
+  {
+    "variable": "start_stop_s1",
+    "rol": "CONTEXTO",
+    "nota": "valvula segun llenado/vaciado",
+    "registros_con_valor": 1836,
+    "cobertura_pct": 31.64
+  },
+  {
+    "variable": "start_stop_s2",
+    "rol": "CONTEXTO",
+    "nota": "valvula segun llenado/vaciado",
+    "registros_con_valor": 1836,
+    "cobertura_pct": 31.64
+  },
+  {
+    "variable": "estado_s1",
+    "rol": "CONTEXTO",
+    "nota": "estado automatico de valvula",
+    "registros_con_valor": 1836,
+    "cobertura_pct": 31.64
+  },
+  {
+    "variable": "estado_s2",
+    "rol": "CONTEXTO",
+    "nota": "estado automatico de valvula",
+    "registros_con_valor": 1836,
+    "cobertura_pct": 31.64
+  },
+  {
+    "variable": "setpoint_llenado",
+    "rol": "CONTEXTO",
+    "nota": "setpoint del ciclo",
+    "registros_con_valor": 1836,
+    "cobertura_pct": 31.64
+  },
+  {
+    "variable": "setpoint_vaciado",
+    "rol": "CONTEXTO",
+    "nota": "setpoint del ciclo",
+    "registros_con_valor": 1836,
+    "cobertura_pct": 31.64
+  },
+  {
+    "variable": "encendido_ia",
+    "rol": "CONTEXTO",
+    "nota": "mando IA/edge",
+    "registros_con_valor": 1836,
+    "cobertura_pct": 31.64
+  },
+  {
+    "variable": "encendido_local",
+    "rol": "CONTEXTO",
+    "nota": "mando local",
+    "registros_con_valor": 1836,
+    "cobertura_pct": 31.64
+  },
+  {
+    "variable": "horas_marcha",
+    "rol": "CONTEXTO",
+    "nota": "uso acumulado",
+    "registros_con_valor": 1836,
+    "cobertura_pct": 31.64
+  },
+  {
+    "variable": "numero_arranques",
+    "rol": "EXCLUIDA_ML",
+    "nota": "contador de arranques manuales",
+    "registros_con_valor": 1836,
+    "cobertura_pct": 31.64
+  },
+  {
+    "variable": "energia_aparente_l1",
+    "rol": "EXCLUIDA_ML",
+    "nota": "congelada en PLC actualmente",
+    "registros_con_valor": 5718,
+    "cobertura_pct": 98.54
+  },
+  {
+    "variable": "start_stop_vfd",
+    "rol": "EXCLUIDA_ML",
+    "nota": "semantica pendiente",
+    "registros_con_valor": 1836,
+    "cobertura_pct": 31.64
+  }
+]

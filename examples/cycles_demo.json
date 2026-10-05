@@ -1,0 +1,265 @@
+{
+  "count": 10,
+  "cycles": [
+    {
+      "ciclo_id": 54,
+      "inicio": "2026-10-05T13:34:01.443104100",
+      "fin_movimiento": "2026-10-05T13:35:38.490572500",
+      "duracion_movimiento_seg": 97.05,
+      "registros": 108,
+      "registros_movimiento": 98,
+      "nivel_inicio": 39.6809921264648,
+      "nivel_fin": 82.4435806274414,
+      "flujo_estable_mediana": 18.1495952606201,
+      "presion_estable_mediana": 8.70225715637207,
+      "velocidad_estable_mediana": 1197.0,
+      "indice_maximo": 83.6,
+      "indice_p95": 64.92,
+      "nivel_anomalia": "ALTO",
+      "max_duracion_presion_alta_seg": 91.0,
+      "contexto": {
+        "ENRIQUECIDO": 108
+      },
+      "razones": [
+        "umbral_presion_alta_persistente",
+        "primer_umbral_presion_alta_activo",
+        "falta_presion_durante_gracia_de_arranque",
+        "patron_multivariable_atipico_para_la_fase"
+      ]
+    },
+    {
+      "ciclo_id": 55,
+      "inicio": "2026-10-05T13:37:58.510522800",
+      "fin_movimiento": "2026-10-05T13:39:35.602819",
+      "duracion_movimiento_seg": 97.09,
+      "registros": 99,
+      "registros_movimiento": 90,
+      "nivel_inicio": 39.7822608947754,
+      "nivel_fin": 82.5159149169922,
+      "flujo_estable_mediana": 18.189380645752,
+      "presion_estable_mediana": 8.66427898406982,
+      "velocidad_estable_mediana": 1197.0,
+      "indice_maximo": 80.95,
+      "indice_p95": 50.11,
+      "nivel_anomalia": "ALTO",
+      "max_duracion_presion_alta_seg": 91.1,
+      "contexto": {
+        "ENRIQUECIDO": 99
+      },
+      "razones": [
+        "umbral_presion_alta_persistente",
+        "primer_umbral_presion_alta_activo",
+        "falta_presion_durante_gracia_de_arranque",
+        "patron_multivariable_atipico_para_la_fase"
+      ]
+    },
+    {
+      "ciclo_id": 56,
+      "inicio": "2026-10-05T13:41:55.677759",
+      "fin_movimiento": "2026-10-05T13:43:33.662467600",
+      "duracion_movimiento_seg": 97.98,
+      "registros": 108,
+      "registros_movimiento": 99,
+      "nivel_inicio": 39.9088516235352,
+      "nivel_fin": 82.9318618774414,
+      "flujo_estable_mediana": 18.138744354248,
+      "presion_estable_mediana": 8.75108528137207,
+      "velocidad_estable_mediana": 1197.0,
+      "indice_maximo": 99.69,
+      "indice_p95": 18.31,
+      "nivel_anomalia": "MUY_ALTO",
+      "max_duracion_presion_alta_seg": 92.02,
+      "contexto": {
+        "ENRIQUECIDO": 108
+      },
+      "razones": [
+        "umbral_presion_alta_persistente",
+        "primer_umbral_presion_alta_activo",
+        "falta_presion_durante_gracia_de_arranque",
+        "patron_multivariable_atipico_para_la_fase"
+      ]
+    },
+    {
+      "ciclo_id": 57,
+      "inicio": "2026-10-05T13:45:55.704571",
+      "fin_movimiento": "2026-10-05T13:47:33.767869200",
+      "duracion_movimiento_seg": 98.06,
+      "registros": 109,
+      "registros_movimiento": 99,
+      "nivel_inicio": 39.6809921264648,
+      "nivel_fin": 83.0620651245117,
+      "flujo_estable_mediana": 18.1604461669922,
+      "presion_estable_mediana": 8.72938346862793,
+      "velocidad_estable_mediana": 1197.0,
+      "indice_maximo": 92.88,
+      "indice_p95": 71.59,
+      "nivel_anomalia": "MUY_ALTO",
+      "max_duracion_presion_alta_seg": 91.01,
+      "contexto": {
+        "ENRIQUECIDO": 109
+      },
+      "razones": [
+        "umbral_presion_alta_persistente",
+        "primer_umbral_presion_alta_activo",
+        "patron_multivariable_atipico_para_la_fase",
+        "falta_presion_durante_gracia_de_arranque"
+      ]
+    },
+    {
+      "ciclo_id": 58,
+      "inicio": "2026-10-05T13:49:53.830042600",
+      "fin_movimiento": "2026-10-05T13:51:30.759073100",
+      "duracion_movimiento_seg": 96.93,
+      "registros": 107,
+      "registros_movimiento": 98,
+      "nivel_inicio": 39.9088516235352,
+      "nivel_fin": 82.421875,
+      "flujo_estable_mediana": 18.1785297393799,
+      "presion_estable_mediana": 8.66427898406982,
+      "velocidad_estable_mediana": 1197.0,
+      "indice_maximo": 87.5,
+      "indice_p95": 53.4,
+      "nivel_anomalia": "ALTO",
+      "max_duracion_presion_alta_seg": 91.04,
+      "contexto": {
+        "ENRIQUECIDO": 107
+      },
+      "razones": [
+        "umbral_presion_alta_persistente",
+        "primer_umbral_presion_alta_activo",
+        "falta_presion_durante_gracia_de_arranque",
+        "patron_multivariable_atipico_para_la_fase"
+      ]
+    },
+    {
+      "ciclo_id": 59,
+      "inicio": "2026-10-05T13:53:50.833270400",
+      "fin_movimiento": "2026-10-05T13:55:26.840764600",
+      "duracion_movimiento_seg": 96.01,
+      "registros": 106,
+      "registros_movimiento": 97,
+      "nivel_inicio": 39.7786483764648,
+      "nivel_fin": 82.2699661254883,
+      "flujo_estable_mediana": 18.1821460723877,
+      "presion_estable_mediana": 8.69683170318604,
+      "velocidad_estable_mediana": 1197.0,
+      "indice_maximo": 83.91,
+      "indice_p95": 47.0,
+      "nivel_anomalia": "ALTO",
+      "max_duracion_presion_alta_seg": 89.96,
+      "contexto": {
+        "ENRIQUECIDO": 106
+      },
+      "razones": [
+        "umbral_presion_alta_persistente",
+        "primer_umbral_presion_alta_activo",
+        "falta_presion_durante_gracia_de_arranque",
+        "patron_multivariable_atipico_para_la_fase"
+      ]
+    },
+    {
+      "ciclo_id": 60,
+      "inicio": "2026-10-05T13:57:45.901173200",
+      "fin_movimiento": "2026-10-05T13:59:23.957264300",
+      "duracion_movimiento_seg": 98.06,
+      "registros": 109,
+      "registros_movimiento": 99,
+      "nivel_inicio": 39.8980026245117,
+      "nivel_fin": 82.743782043457,
+      "flujo_estable_mediana": 18.1749134063721,
+      "presion_estable_mediana": 8.69140625,
+      "velocidad_estable_mediana": 1197.0,
+      "indice_maximo": 100.0,
+      "indice_p95": 17.73,
+      "nivel_anomalia": "MUY_ALTO",
+      "max_duracion_presion_alta_seg": 92.01,
+      "contexto": {
+        "ENRIQUECIDO": 109
+      },
+      "razones": [
+        "umbral_presion_alta_persistente",
+        "primer_umbral_presion_alta_activo",
+        "falta_presion_durante_gracia_de_arranque",
+        "patron_multivariable_atipico_para_la_fase"
+      ]
+    },
+    {
+      "ciclo_id": 61,
+      "inicio": "2026-10-05T14:01:44.042993200",
+      "fin_movimiento": "2026-10-05T14:03:20.098411500",
+      "duracion_movimiento_seg": 96.06,
+      "registros": 106,
+      "registros_movimiento": 97,
+      "nivel_inicio": 39.6882247924805,
+      "nivel_fin": 82.3206024169922,
+      "flujo_estable_mediana": 18.1785297393799,
+      "presion_estable_mediana": 8.72938346862793,
+      "velocidad_estable_mediana": 1197.0,
+      "indice_maximo": 81.12,
+      "indice_p95": 19.62,
+      "nivel_anomalia": "ALTO",
+      "max_duracion_presion_alta_seg": 90.09,
+      "contexto": {
+        "ENRIQUECIDO": 106
+      },
+      "razones": [
+        "umbral_presion_alta_persistente",
+        "primer_umbral_presion_alta_activo",
+        "falta_presion_durante_gracia_de_arranque",
+        "patron_multivariable_atipico_para_la_fase"
+      ]
+    },
+    {
+      "ciclo_id": 62,
+      "inicio": "2026-10-05T14:05:39.247730600",
+      "fin_movimiento": "2026-10-05T14:07:17.334206600",
+      "duracion_movimiento_seg": 98.09,
+      "registros": 109,
+      "registros_movimiento": 99,
+      "nivel_inicio": 39.74609375,
+      "nivel_fin": 82.3603897094727,
+      "flujo_estable_mediana": 18.1206607818604,
+      "presion_estable_mediana": 8.759223461151127,
+      "velocidad_estable_mediana": 1197.5,
+      "indice_maximo": 94.12,
+      "indice_p95": 37.51,
+      "nivel_anomalia": "MUY_ALTO",
+      "max_duracion_presion_alta_seg": 91.09,
+      "contexto": {
+        "ENRIQUECIDO": 109
+      },
+      "razones": [
+        "umbral_presion_alta_persistente",
+        "primer_umbral_presion_alta_activo",
+        "falta_presion_durante_gracia_de_arranque",
+        "patron_multivariable_atipico_para_la_fase"
+      ]
+    },
+    {
+      "ciclo_id": 63,
+      "inicio": "2026-10-05T14:09:35.490779200",
+      "fin_movimiento": "2026-10-05T14:11:12.529277800",
+      "duracion_movimiento_seg": 97.04,
+      "registros": 107,
+      "registros_movimiento": 98,
+      "nivel_inicio": 39.9631080627441,
+      "nivel_fin": 82.2627334594727,
+      "flujo_estable_mediana": 18.2110824584961,
+      "presion_estable_mediana": 8.68055534362793,
+      "velocidad_estable_mediana": 1197.0,
+      "indice_maximo": 73.08,
+      "indice_p95": 17.5,
+      "nivel_anomalia": "ALTO",
+      "max_duracion_presion_alta_seg": 91.06,
+      "contexto": {
+        "ENRIQUECIDO": 107
+      },
+      "razones": [
+        "umbral_presion_alta_persistente",
+        "primer_umbral_presion_alta_activo",
+        "falta_presion_durante_gracia_de_arranque",
+        "patron_multivariable_atipico_para_la_fase"
+      ]
+    }
+  ]
+}

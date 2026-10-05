@@ -1,0 +1,163 @@
+{
+  "count": 10,
+  "events": [
+    {
+      "evento": 81,
+      "inicio": "2026-10-05T13:51:39.768530",
+      "fin": "2026-10-05T13:51:40.767815700",
+      "duracion_seg": 1.0,
+      "registros": 2,
+      "indice_maximo": 98.68,
+      "indice_promedio": 93.09,
+      "fases": {
+        "POST_PARO": 1,
+        "REPOSO": 1
+      },
+      "razones": [
+        "patron_multivariable_atipico_para_la_fase"
+      ]
+    },
+    {
+      "evento": 82,
+      "inicio": "2026-10-05T13:53:20.839009900",
+      "fin": "2026-10-05T13:53:20.839009900",
+      "duracion_seg": 0.0,
+      "registros": 1,
+      "indice_maximo": 79.2,
+      "indice_promedio": 79.2,
+      "fases": {
+        "REPOSO": 1
+      },
+      "razones": [
+        "patron_multivariable_atipico_para_la_fase"
+      ]
+    },
+    {
+      "evento": 83,
+      "inicio": "2026-10-05T13:53:56.829159200",
+      "fin": "2026-10-05T13:53:56.829159200",
+      "duracion_seg": 0.0,
+      "registros": 1,
+      "indice_maximo": 83.91,
+      "indice_promedio": 83.91,
+      "fases": {
+        "OPERACION_ESTABLE": 1
+      },
+      "razones": [
+        "patron_multivariable_atipico_para_la_fase",
+        "primer_umbral_presion_alta_activo"
+      ]
+    },
+    {
+      "evento": 84,
+      "inicio": "2026-10-05T13:55:27.839655200",
+      "fin": "2026-10-05T13:55:27.839655200",
+      "duracion_seg": 0.0,
+      "registros": 1,
+      "indice_maximo": 70.0,
+      "indice_promedio": 70.0,
+      "fases": {
+        "POST_PARO": 1
+      },
+      "razones": [
+        "patron_multivariable_atipico_para_la_fase"
+      ]
+    },
+    {
+      "evento": 85,
+      "inicio": "2026-10-05T13:57:51.919257800",
+      "fin": "2026-10-05T13:57:52.871907",
+      "duracion_seg": 0.95,
+      "registros": 2,
+      "indice_maximo": 100.0,
+      "indice_promedio": 87.16,
+      "fases": {
+        "OPERACION_ESTABLE": 2
+      },
+      "razones": [
+        "patron_multivariable_atipico_para_la_fase",
+        "primer_umbral_presion_alta_activo"
+      ]
+    },
+    {
+      "evento": 86,
+      "inicio": "2026-10-05T13:59:17.943847800",
+      "fin": "2026-10-05T13:59:17.943847800",
+      "duracion_seg": 0.0,
+      "registros": 1,
+      "indice_maximo": 70.91,
+      "indice_promedio": 70.91,
+      "fases": {
+        "OPERACION_ESTABLE": 1
+      },
+      "razones": [
+        "patron_multivariable_atipico_para_la_fase",
+        "umbral_presion_alta_persistente"
+      ]
+    },
+    {
+      "evento": 87,
+      "inicio": "2026-10-05T14:01:50.022390700",
+      "fin": "2026-10-05T14:01:50.022390700",
+      "duracion_seg": 0.0,
+      "registros": 1,
+      "indice_maximo": 81.12,
+      "indice_promedio": 81.12,
+      "fases": {
+        "OPERACION_ESTABLE": 1
+      },
+      "razones": [
+        "patron_multivariable_atipico_para_la_fase",
+        "primer_umbral_presion_alta_activo"
+      ]
+    },
+    {
+      "evento": 88,
+      "inicio": "2026-10-05T14:05:45.295505300",
+      "fin": "2026-10-05T14:05:45.295505300",
+      "duracion_seg": 0.0,
+      "registros": 1,
+      "indice_maximo": 94.12,
+      "indice_promedio": 94.12,
+      "fases": {
+        "OPERACION_ESTABLE": 1
+      },
+      "razones": [
+        "patron_multivariable_atipico_para_la_fase",
+        "primer_umbral_presion_alta_activo"
+      ]
+    },
+    {
+      "evento": 89,
+      "inicio": "2026-10-05T14:06:40.292412400",
+      "fin": "2026-10-05T14:06:40.292412400",
+      "duracion_seg": 0.0,
+      "registros": 1,
+      "indice_maximo": 74.0,
+      "indice_promedio": 74.0,
+      "fases": {
+        "OPERACION_ESTABLE": 1
+      },
+      "razones": [
+        "patron_multivariable_atipico_para_la_fase",
+        "umbral_presion_alta_persistente"
+      ]
+    },
+    {
+      "evento": 90,
+      "inicio": "2026-10-05T14:09:42.460806200",
+      "fin": "2026-10-05T14:09:42.460806200",
+      "duracion_seg": 0.0,
+      "registros": 1,
+      "indice_maximo": 73.08,
+      "indice_promedio": 73.08,
+      "fases": {
+        "OPERACION_ESTABLE": 1
+      },
+      "razones": [
+        "patron_multivariable_atipico_para_la_fase",
+        "primer_umbral_presion_alta_activo"
+      ]
+    }
+  ]
+}

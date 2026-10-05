@@ -1,0 +1,122 @@
+{
+  "model_version": "v2.0-mixed-history-cycle-aware",
+  "summary": {
+    "total_registros": 5803,
+    "desde": "2026-10-02T07:22:52.547344200",
+    "hasta": "2026-10-05T14:11:34.612908300",
+    "indice_actual": 9.14,
+    "indice_maximo": 100.0,
+    "indice_promedio": 18.58,
+    "registros_indice_alto": 250,
+    "registros_indice_muy_alto": 108,
+    "conteo_por_nivel": {
+      "BAJO": 5340,
+      "MEDIO": 213,
+      "ALTO": 142,
+      "MUY_ALTO": 108
+    },
+    "conteo_por_fase": {
+      "REPOSO": 2423,
+      "ARRANQUE": 252,
+      "OPERACION_ESTABLE": 2595,
+      "DESACELERACION": 213,
+      "POST_PARO": 320
+    },
+    "conteo_por_contexto": {
+      "LEGACY": 3967,
+      "ENRIQUECIDO": 1836
+    },
+    "advertencias_presion_alta": 2783
+  },
+  "training_summary": {
+    "total_rows": 5803,
+    "legacy_rows": 3967,
+    "enriched_rows": 1836,
+    "phases": {
+      "REPOSO": {
+        "training_rows": 2423,
+        "trained": true,
+        "features": [
+          "flujo_instantaneo",
+          "presion_relativa",
+          "temperatura_tanque",
+          "nivel_tanque",
+          "voltaje_bus_dc",
+          "tension_l1_n"
+        ]
+      },
+      "ARRANQUE": {
+        "training_rows": 252,
+        "trained": true,
+        "features": [
+          "flujo_instantaneo",
+          "presion_relativa",
+          "nivel_tanque",
+          "frecuencia_salida",
+          "velocidad",
+          "voltaje_salida",
+          "voltaje_bus_dc",
+          "tension_l1_n",
+          "corriente_l1",
+          "potencia_activa_l1",
+          "potencia_aparente_l1"
+        ]
+      },
+      "OPERACION_ESTABLE": {
+        "training_rows": 2585,
+        "trained": true,
+        "features": [
+          "flujo_instantaneo",
+          "presion_relativa",
+          "nivel_tanque",
+          "frecuencia_salida",
+          "velocidad",
+          "voltaje_salida",
+          "voltaje_bus_dc",
+          "tension_l1_n",
+          "corriente_l1",
+          "potencia_activa_l1",
+          "potencia_aparente_l1"
+        ]
+      },
+      "DESACELERACION": {
+        "training_rows": 213,
+        "trained": true,
+        "features": [
+          "flujo_instantaneo",
+          "presion_relativa",
+          "nivel_tanque",
+          "frecuencia_salida",
+          "velocidad",
+          "voltaje_salida",
+          "voltaje_bus_dc",
+          "tension_l1_n",
+          "corriente_l1",
+          "potencia_activa_l1",
+          "potencia_aparente_l1"
+        ]
+      },
+      "POST_PARO": {
+        "training_rows": 320,
+        "trained": true,
+        "features": [
+          "flujo_instantaneo",
+          "presion_relativa",
+          "nivel_tanque",
+          "voltaje_bus_dc",
+          "tension_l1_n"
+        ]
+      }
+    },
+    "excluded_variables": {
+      "energia_aparente_l1": "valor congelado en PLC; pendiente de correccion",
+      "numero_arranques": "contador de arranques manuales, no ciclos automaticos",
+      "start_stop_vfd": "significado operativo aun pendiente de confirmar",
+      "start_stop_s1": "contexto de valvula; no predictor numerico por ahora",
+      "start_stop_s2": "contexto de valvula; no predictor numerico por ahora",
+      "estado_s1": "contexto automatico del ciclo",
+      "estado_s2": "contexto automatico del ciclo",
+      "horas_marcha": "contexto de desgaste acumulado, no rareza instantanea"
+    }
+  }
+}
