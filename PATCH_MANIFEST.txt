@@ -1,0 +1,20 @@
+Mantenimiento Predictivo Tanque - Patch v2.2.1
+Base requerida: v2.2
+
+REEMPLAZA:
+app/main.py
+app/services/model_manager.py
+
+AGREGA:
+tests/test_patch_v221.py
+CHANGELOG_V2_2_1.md
+README_PARCHE_V2_2_1.md
+aplicar_parche_v2_2_1.ps1
+
+NO MODIFICA:
+.env
+requirements.txt
+SQL Server
+Node-RED
+anomaly_engine.py
+config.py

@@ -14,9 +14,9 @@ from app.services.model_manager import model_manager
 
 app = FastAPI(
     title=settings.app_name,
-    version="2.2.0",
+    version="2.2.1",
     description=(
-        "Backend v2.2 para indice de anomalia 0-100 del tanque. Soporta historial "
+        "Backend v2.2.1 para indice de anomalia 0-100 del tanque. Soporta historial "
         "mixto: registros antiguos con NULL en variables nuevas y registros v3 enriquecidos."
     ),
 )
@@ -29,8 +29,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-API_VERSION = "2.2.0"
+API_VERSION = "2.2.1"
 SOURCE_PATTERN = "^(file|sqlserver)$"
+EVENT_SCOPE_PATTERN = "^(recent|full)$"
 
 
 def _cols_for_frontend(df: pd.DataFrame) -> list[str]:
@@ -219,13 +220,27 @@ def anomaly_history(
 def anomaly_events(
     source: str = Query(default=settings.data_source, pattern=SOURCE_PATTERN),
     threshold: float = Query(default=settings.event_open_threshold, ge=0.0, le=100.0),
+    scope: str = Query(default="recent", pattern=EVENT_SCOPE_PATTERN),
     recent_rows: int = Query(default=5000, ge=100, le=50000),
 ):
+    """
+    Agrupa eventos persistentes.
+
+    - scope=recent: evalua una ventana reciente de SQL; puede devolver 0 si la maquina
+      estuvo detenida durante ese intervalo.
+    - scope=full: evalua el snapshot historico completo generado por el ultimo rebuild.
+    """
     try:
-        events = model_manager.events_latest(source, threshold=threshold, limit_rows=recent_rows)
-        return {
+        events = model_manager.events(
+            source,
+            threshold=threshold,
+            scope=scope,
+            limit_rows=recent_rows,
+        )
+        response = {
             "model_version": MODEL_VERSION,
             "source": source,
+            "scope": scope,
             "threshold": threshold,
             "event_policy": {
                 "min_consecutive": settings.event_min_consecutive,
@@ -237,6 +252,19 @@ def anomaly_events(
             "count": len(events),
             "events": events,
         }
+        if scope == "recent":
+            response["recent_rows"] = recent_rows
+            response["scope_note"] = (
+                "Ventana reciente. Un count=0 es esperado si no hubo operacion/anomalias "
+                "persistentes durante el intervalo reciente."
+            )
+        else:
+            snap = _snapshot(source)
+            response["snapshot_built_at"] = snap.built_at.isoformat()
+            response["scope_note"] = (
+                "Historial completo contenido en el snapshot del ultimo model/rebuild."
+            )
+        return response
     except DataSourceError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
@@ -246,11 +274,21 @@ def cycles_latest(
     source: str = Query(default=settings.data_source, pattern=SOURCE_PATTERN),
     limit: int = Query(default=settings.cycle_default_limit, ge=1, le=200),
 ):
+    """
+    Devuelve los ultimos ciclos DETECTADOS en el snapshot del ultimo rebuild.
+
+    No depende de que la maquina haya operado en las ultimas horas. Si el equipo estuvo
+    detenido durante la noche, se siguen devolviendo los ultimos ciclos existentes.
+    """
     try:
+        snap = _snapshot(source)
         cycles = model_manager.cycles_latest(source, limit=limit)
         return {
             "model_version": MODEL_VERSION,
             "source": source,
+            "scope": "snapshot_full_history",
+            "snapshot_built_at": snap.built_at.isoformat(),
+            "cycles_detected_snapshot": len(snap.cycles),
             "count": len(cycles),
             "cycles": cycles,
         }

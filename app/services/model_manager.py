@@ -92,28 +92,52 @@ class ModelManager:
         scored = snapshot.engine.score(raw)
         return scored.tail(limit).reset_index(drop=True)
 
-    def events_latest(self, source: str, threshold: float, limit_rows: int = 5000):
+    def events(
+        self,
+        source: str,
+        threshold: float,
+        scope: str = "recent",
+        limit_rows: int = 5000,
+    ):
+        """Construye eventos sobre ventana reciente o snapshot historico completo."""
+        source = source.strip().lower()
+        scope = scope.strip().lower()
         snapshot = self.get(source)
-        if source == "file":
+
+        if scope == "full":
             scored = snapshot.scored_full
+        elif scope == "recent":
+            if source == "file":
+                scored = snapshot.scored_full.tail(limit_rows).reset_index(drop=True)
+            else:
+                raw = load_latest(
+                    source,
+                    limit=limit_rows,
+                    context_rows=settings.latest_context_rows,
+                )
+                scored = snapshot.engine.score(raw)
         else:
-            raw = load_latest(source, limit=limit_rows, context_rows=settings.latest_context_rows)
-            scored = snapshot.engine.score(raw)
+            raise ValueError("scope debe ser 'recent' o 'full'.")
+
         return build_events(scored, threshold=threshold)
 
+    def events_latest(self, source: str, threshold: float, limit_rows: int = 5000):
+        """Compatibilidad interna con v2.2: equivale a scope=recent."""
+        return self.events(
+            source,
+            threshold=threshold,
+            scope="recent",
+            limit_rows=limit_rows,
+        )
+
     def cycles_latest(self, source: str, limit: int):
+        """Devuelve los ultimos ciclos detectados durante el ultimo rebuild.
+
+        A diferencia de v2.2, no intenta reconstruir ciclos solo con una ventana reciente.
+        Esto evita devolver una lista vacia cuando el equipo estuvo detenido durante horas.
+        """
         snapshot = self.get(source)
-        if source == "file":
-            cycles = snapshot.cycles
-        else:
-            raw = load_latest(
-                source,
-                limit=max(settings.latest_context_rows, limit * 250),
-                context_rows=settings.latest_context_rows,
-            )
-            scored = snapshot.engine.score(raw)
-            cycles = build_cycles(scored)
-        return cycles[-limit:]
+        return snapshot.cycles[-limit:]
 
 
 model_manager = ModelManager()
