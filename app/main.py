@@ -14,9 +14,9 @@ from app.services.model_manager import model_manager
 
 app = FastAPI(
     title=settings.app_name,
-    version="2.0.0",
+    version="2.2.0",
     description=(
-        "Backend v2 para indice de anomalia 0-100 del tanque. Soporta historial "
+        "Backend v2.2 para indice de anomalia 0-100 del tanque. Soporta historial "
         "mixto: registros antiguos con NULL en variables nuevas y registros v3 enriquecidos."
     ),
 )
@@ -29,6 +29,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+API_VERSION = "2.2.0"
 SOURCE_PATTERN = "^(file|sqlserver)$"
 
 
@@ -51,6 +52,8 @@ def _cols_for_frontend(df: pd.DataFrame) -> list[str]:
         "contexto_nuevas_variables_disponibles",
         "confianza_evaluacion",
         "razones",
+        "advertencias",
+        "observaciones",
         "flujo_instantaneo",
         "presion_relativa",
         "temperatura_tanque",
@@ -114,6 +117,7 @@ def health():
     return {
         "status": "ok",
         "service": settings.app_name,
+        "api_version": API_VERSION,
         "model_version": MODEL_VERSION,
         "default_source": settings.data_source,
         "supports_legacy_null_context": True,
@@ -214,7 +218,7 @@ def anomaly_history(
 @app.get("/api/v2/anomalies/events/")
 def anomaly_events(
     source: str = Query(default=settings.data_source, pattern=SOURCE_PATTERN),
-    threshold: float = Query(default=70.0, ge=0.0, le=100.0),
+    threshold: float = Query(default=settings.event_open_threshold, ge=0.0, le=100.0),
     recent_rows: int = Query(default=5000, ge=100, le=50000),
 ):
     try:
@@ -223,6 +227,13 @@ def anomaly_events(
             "model_version": MODEL_VERSION,
             "source": source,
             "threshold": threshold,
+            "event_policy": {
+                "min_consecutive": settings.event_min_consecutive,
+                "min_duration_seconds": settings.event_min_duration_seconds,
+                "close_threshold": settings.event_close_threshold,
+                "close_seconds": settings.event_close_seconds,
+                "immediate_rule_threshold": settings.event_immediate_rule_threshold,
+            },
             "count": len(events),
             "events": events,
         }

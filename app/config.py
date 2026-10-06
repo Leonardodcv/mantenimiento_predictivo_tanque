@@ -33,7 +33,7 @@ def _env_bool(name: str, default: bool = False) -> bool:
 
 @dataclass(frozen=True)
 class Settings:
-    app_name: str = os.getenv("APP_NAME", "Mantenimiento Predictivo Tanque API v2.1")
+    app_name: str = os.getenv("APP_NAME", "Mantenimiento Predictivo Tanque API v2.2")
     app_env: str = os.getenv("APP_ENV", "development")
     host: str = os.getenv("APP_HOST", "0.0.0.0")
     port: int = _env_int("APP_PORT", 8002)
@@ -56,19 +56,37 @@ class Settings:
     default_limit: int = _env_int("ANOMALY_DEFAULT_LIMIT", 500)
     cycle_default_limit: int = _env_int("CYCLE_DEFAULT_LIMIT", 20)
 
-    # Parametros del motor v2.
+    # Fases operativas.
     movement_speed_threshold: float = _env_float("MOVEMENT_SPEED_THRESHOLD", 20.0)
     stable_speed_threshold: float = _env_float("STABLE_SPEED_THRESHOLD", 1100.0)
     post_stop_seconds: float = _env_float("POST_STOP_SECONDS", 10.0)
     startup_grace_seconds: float = _env_float("STARTUP_GRACE_SECONDS", 5.0)
+
+    # v2.2: presion_alta es ADVERTENCIA; no sube directamente el indice final.
     pressure_warning_persistent_seconds: float = _env_float(
         "PRESSURE_WARNING_PERSISTENT_SECONDS", 15.0
     )
 
+    # v2.2: eventos persistentes con histeresis.
+    event_open_threshold: float = _env_float("EVENT_OPEN_THRESHOLD", 80.0)
+    event_min_consecutive: int = _env_int("EVENT_MIN_CONSECUTIVE", 3)
+    event_min_duration_seconds: float = _env_float("EVENT_MIN_DURATION_SECONDS", 5.0)
+    event_close_threshold: float = _env_float("EVENT_CLOSE_THRESHOLD", 60.0)
+    event_close_seconds: float = _env_float("EVENT_CLOSE_SECONDS", 5.0)
+    event_immediate_rule_threshold: float = _env_float(
+        "EVENT_IMMEDIATE_RULE_THRESHOLD", 85.0
+    )
+    event_max_gap_seconds: float = _env_float("EVENT_MAX_GAP_SECONDS", 12.0)
+
+    # v2.2: score de ciclo = p95 + reglas fisicas persistentes + firma del ciclo.
+    cycle_signature_min_baseline: int = _env_int("CYCLE_SIGNATURE_MIN_BASELINE", 12)
+    cycle_signature_z_start: float = _env_float("CYCLE_SIGNATURE_Z_START", 2.5)
+    cycle_signature_z_high: float = _env_float("CYCLE_SIGNATURE_Z_HIGH", 4.5)
+    cycle_instant_peak_threshold: float = _env_float("CYCLE_INSTANT_PEAK_THRESHOLD", 90.0)
+
     # SQL Server.
     sql_driver: str = os.getenv("SQL_DRIVER", "ODBC Driver 17 for SQL Server")
     sql_server: str = os.getenv("SQL_SERVER", r"USER4710-PC\SQLEXPRESS").strip()
-    # Puede quedar vacio cuando se usa una instancia nombrada (por ejemplo SQLEXPRESS).
     sql_port: str = os.getenv("SQL_PORT", "").strip()
     sql_database: str = os.getenv("SQL_DATABASE", "MantenimientoPredictivo")
     sql_table: str = os.getenv("SQL_TABLE", "dbo.LecturasTanque")

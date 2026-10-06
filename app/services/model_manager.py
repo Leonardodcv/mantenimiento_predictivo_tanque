@@ -10,6 +10,7 @@ import pandas as pd
 from app.config import settings
 from app.services.anomaly_engine import (
     AnomalyEngine,
+    MODEL_VERSION,
     build_cycles,
     build_events,
     build_summary,
@@ -71,10 +72,11 @@ class ModelManager:
         with self._lock:
             snapshot = self._snapshots.get(source)
         if snapshot is None:
-            return {"source": source, "ready": False}
+            return {"source": source, "ready": False, "model_version": MODEL_VERSION}
         return {
             "source": source,
             "ready": True,
+            "model_version": MODEL_VERSION,
             "built_at": snapshot.built_at.isoformat(),
             "training_summary": snapshot.engine.training_summary,
             "summary": snapshot.summary,
