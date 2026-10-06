@@ -24,9 +24,16 @@ def _env_float(name: str, default: float) -> float:
         return default
 
 
+def _env_bool(name: str, default: bool = False) -> bool:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
 @dataclass(frozen=True)
 class Settings:
-    app_name: str = os.getenv("APP_NAME", "Mantenimiento Predictivo API v2")
+    app_name: str = os.getenv("APP_NAME", "Mantenimiento Predictivo Tanque API v2.1")
     app_env: str = os.getenv("APP_ENV", "development")
     host: str = os.getenv("APP_HOST", "0.0.0.0")
     port: int = _env_int("APP_PORT", 8002)
@@ -34,7 +41,7 @@ class Settings:
         item.strip()
         for item in os.getenv(
             "CORS_ALLOWED_ORIGINS",
-            "http://localhost:5173,http://127.0.0.1:5173",
+            "http://localhost:5174,http://127.0.0.1:5174",
         ).split(",")
         if item.strip()
     )
@@ -59,11 +66,13 @@ class Settings:
     )
 
     # SQL Server.
-    sql_driver: str = os.getenv("SQL_DRIVER", "ODBC Driver 18 for SQL Server")
-    sql_server: str = os.getenv("SQL_SERVER", "10.10.17.13")
-    sql_port: int = _env_int("SQL_PORT", 1433)
+    sql_driver: str = os.getenv("SQL_DRIVER", "ODBC Driver 17 for SQL Server")
+    sql_server: str = os.getenv("SQL_SERVER", r"USER4710-PC\SQLEXPRESS").strip()
+    # Puede quedar vacio cuando se usa una instancia nombrada (por ejemplo SQLEXPRESS).
+    sql_port: str = os.getenv("SQL_PORT", "").strip()
     sql_database: str = os.getenv("SQL_DATABASE", "MantenimientoPredictivo")
     sql_table: str = os.getenv("SQL_TABLE", "dbo.LecturasTanque")
+    sql_trusted_connection: bool = _env_bool("SQL_TRUSTED_CONNECTION", False)
     sql_username: str = os.getenv("SQL_USERNAME", "")
     sql_password: str = os.getenv("SQL_PASSWORD", "")
     sql_encrypt: str = os.getenv("SQL_ENCRYPT", "no")

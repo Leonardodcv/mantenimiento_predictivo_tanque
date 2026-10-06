@@ -55,20 +55,38 @@ def read_file(limit: int | None = None) -> pd.DataFrame:
 
 
 def _sql_connection_string() -> str:
-    if not settings.sql_username or not settings.sql_password:
-        raise DataSourceError(
-            "SQL_USERNAME y SQL_PASSWORD deben configurarse localmente para usar SQL Server."
+    server = settings.sql_server
+    if settings.sql_port:
+        server = f"{server},{settings.sql_port}"
+
+    parts = [
+        f"DRIVER={{{settings.sql_driver}}}",
+        f"SERVER={server}",
+        f"DATABASE={settings.sql_database}",
+    ]
+
+    if settings.sql_trusted_connection:
+        parts.append("Trusted_Connection=yes")
+    else:
+        if not settings.sql_username or not settings.sql_password:
+            raise DataSourceError(
+                "Configura SQL_TRUSTED_CONNECTION=yes o define SQL_USERNAME y SQL_PASSWORD."
+            )
+        parts.extend(
+            [
+                f"UID={settings.sql_username}",
+                f"PWD={settings.sql_password}",
+            ]
         )
-    return (
-        f"DRIVER={{{settings.sql_driver}}};"
-        f"SERVER={settings.sql_server},{settings.sql_port};"
-        f"DATABASE={settings.sql_database};"
-        f"UID={settings.sql_username};"
-        f"PWD={settings.sql_password};"
-        f"Encrypt={settings.sql_encrypt};"
-        f"TrustServerCertificate={settings.sql_trust_server_certificate};"
-        f"Connection Timeout={settings.sql_connection_timeout};"
+
+    parts.extend(
+        [
+            f"Encrypt={settings.sql_encrypt}",
+            f"TrustServerCertificate={settings.sql_trust_server_certificate}",
+            f"Connection Timeout={settings.sql_connection_timeout}",
+        ]
     )
+    return ";".join(parts) + ";"
 
 
 def _connect():

@@ -327,3 +327,7 @@ razones
 - Usa `/anomalies/latest/` desde React para la vista en tiempo casi real.
 - Usa `/cycles/latest/` para comparar un ciclo contra los anteriores.
 - Cuando los programadores corrijan `energia_aparente_l1`, no la agregues automaticamente al modelo: primero verifica que evolucione correctamente y luego se incorpora en una v2.x/v3.
+
+## v2.1 - Autenticacion integrada de Windows
+
+Esta variante acepta `SQL_TRUSTED_CONNECTION=yes`, por lo que puede conectarse a una instancia local como `USER4710-PC\\SQLEXPRESS` usando la identidad de Windows con la que se ejecuta Python. En este modo `SQL_USERNAME` y `SQL_PASSWORD` se dejan vacios y `SQL_PORT` puede quedar vacio para una instancia nombrada.
