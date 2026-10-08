@@ -7,18 +7,18 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.services.anomaly_engine_v31 import MODEL_VERSION, dataframe_records
+from app.services.anomaly_engine_v32 import MODEL_VERSION, dataframe_records
 from app.services.data_source import DataSourceError, sqlserver_metadata
 from app.services.model_manager import model_manager
 
 
 app = FastAPI(
     title=settings.app_name,
-    version="3.1.0",
+    version="3.2.0",
     description=(
-        "Backend v3.1 para mantenimiento predictivo del tanque. Agrega explicabilidad "
-        "heuristica por regimen, clasificacion de la evidencia y separa eventos transitorios "
-        "del estado integral de cada ciclo. Conserva soporte de historial LEGACY con NULL."
+        "Backend v3.2 para mantenimiento predictivo del tanque. Protege y congela el baseline "
+        "de ciclos, pone desviaciones en cuarentena, detecta nuevos regimenes candidatos, "
+        "usa pisos fisicos en la explicabilidad y separa ciclos parciales por nivel inicial."
     ),
 )
 
@@ -30,7 +30,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-API_VERSION = "3.1.0"
+API_VERSION = "3.2.0"
 SOURCE_PATTERN = "^(file|sqlserver)$"
 EVENT_SCOPE_PATTERN = "^(recent|full)$"
 
@@ -144,6 +144,11 @@ def health():
         "uses_engineering_tolerances": True,
         "supports_ml_explainability": True,
         "separates_transient_events_from_cycle_health": True,
+        "uses_protected_frozen_cycle_baseline": True,
+        "supports_baseline_quarantine": True,
+        "detects_new_regime_candidates": True,
+        "uses_physical_floor_for_explanations": True,
+        "detects_partial_cycles_by_initial_level": True,
         "warning": "El indice es anomalia/rareza, no probabilidad de falla.",
     }
 
@@ -154,10 +159,13 @@ def model_status(source: str = Query(default=settings.data_source, pattern=SOURC
 
 
 @app.post("/api/v3/model/rebuild/")
-def model_rebuild(source: str = Query(default=settings.data_source, pattern=SOURCE_PATTERN)):
-    """Relee todo el historial y reconstruye modelos, ciclos y baseline v3.1."""
+def model_rebuild(
+    source: str = Query(default=settings.data_source, pattern=SOURCE_PATTERN),
+    reset_cycle_baseline: bool = Query(default=False),
+):
+    """Relee el historial. El baseline protegido se conserva salvo reset explicito."""
     try:
-        snap = model_manager.rebuild(source)
+        snap = model_manager.rebuild(source, reset_cycle_baseline=reset_cycle_baseline)
         response = {
             "status": "ok",
             "source": source,
@@ -253,7 +261,8 @@ def anomaly_explain(
         "record": dataframe_records(row[cols])[0],
         "explanation_note": (
             "variables_mas_atipicas es una explicacion heuristica contra el baseline robusto "
-            "del regimen; no es una atribucion causal exacta del Isolation Forest."
+            "del regimen usando una escala minima fisica cuando la dispersion estadistica "
+            "colapsa; no es una atribucion causal exacta del Isolation Forest."
         ),
     }
 
@@ -327,6 +336,25 @@ def cycles_baseline(source: str = Query(default=settings.data_source, pattern=SO
         "source": source,
         "snapshot_built_at": snap.built_at.isoformat(),
         "baseline": snap.cycle_baseline,
+    }
+
+
+@app.get("/api/v3/cycles/regime-candidates/")
+def cycles_regime_candidates(
+    source: str = Query(default=settings.data_source, pattern=SOURCE_PATTERN),
+):
+    snap = _snapshot(source)
+    candidates = model_manager.new_regime_candidates(source)
+    return {
+        "model_version": MODEL_VERSION,
+        "source": source,
+        "snapshot_built_at": snap.built_at.isoformat(),
+        "count": len(candidates),
+        "regime_candidates": candidates,
+        "note": (
+            "Un nuevo_regimen_candidato permanece en cuarentena: no se incorpora al baseline "
+            "congelado hasta que se regenere explicitamente con reset_cycle_baseline=true."
+        ),
     }
 
 

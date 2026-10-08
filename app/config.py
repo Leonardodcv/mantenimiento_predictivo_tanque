@@ -33,7 +33,7 @@ def _env_bool(name: str, default: bool = False) -> bool:
 
 @dataclass(frozen=True)
 class Settings:
-    app_name: str = os.getenv("APP_NAME", "Mantenimiento Predictivo Tanque API v3.1")
+    app_name: str = os.getenv("APP_NAME", "Mantenimiento Predictivo Tanque API v3.2")
     app_env: str = os.getenv("APP_ENV", "development")
     host: str = os.getenv("APP_HOST", "0.0.0.0")
     port: int = _env_int("APP_PORT", 8002)
@@ -102,11 +102,24 @@ class Settings:
     )
     cycle_instant_peak_threshold: float = _env_float("CYCLE_INSTANT_PEAK_THRESHOLD", 90.0)
 
-    # v3.1: explicabilidad heuristica del ML por regimen.
+    # v3.1/v3.2: explicabilidad heuristica del ML por regimen.
     explain_min_index: float = _env_float("EXPLAIN_MIN_INDEX", 70.0)
     explain_top_features: int = _env_int("EXPLAIN_TOP_FEATURES", 8)
     explain_min_robust_z: float = _env_float("EXPLAIN_MIN_ROBUST_Z", 1.5)
     explain_z_full_scale: float = _env_float("EXPLAIN_Z_FULL_SCALE", 6.0)
+
+    # v3.2: piso fisico de escala para evitar z robustos absurdos cuando MAD ~= 0.
+    explain_min_scale_flow: float = _env_float("EXPLAIN_MIN_SCALE_FLOW", 0.20)
+    explain_min_scale_pressure: float = _env_float("EXPLAIN_MIN_SCALE_PRESSURE", 0.10)
+    explain_min_scale_level: float = _env_float("EXPLAIN_MIN_SCALE_LEVEL", 1.0)
+    explain_min_scale_frequency: float = _env_float("EXPLAIN_MIN_SCALE_FREQUENCY", 1.0)
+    explain_min_scale_speed: float = _env_float("EXPLAIN_MIN_SCALE_SPEED", 10.0)
+    explain_min_scale_output_voltage: float = _env_float("EXPLAIN_MIN_SCALE_OUTPUT_VOLTAGE", 2.0)
+    explain_min_scale_dc_bus: float = _env_float("EXPLAIN_MIN_SCALE_DC_BUS", 5.0)
+    explain_min_scale_l1_voltage: float = _env_float("EXPLAIN_MIN_SCALE_L1_VOLTAGE", 5.0)
+    explain_min_scale_l1_current: float = _env_float("EXPLAIN_MIN_SCALE_L1_CURRENT", 0.005)
+    explain_min_scale_active_power: float = _env_float("EXPLAIN_MIN_SCALE_ACTIVE_POWER", 1.0)
+    explain_min_scale_apparent_power: float = _env_float("EXPLAIN_MIN_SCALE_APPARENT_POWER", 1.0)
 
     # v3.1: el estado global del ciclo no se hereda automaticamente de un
     # evento corto. El evento se conserva por separado.
@@ -130,6 +143,38 @@ class Settings:
     cycle_tol_speed_abs: float = _env_float("CYCLE_TOL_SPEED_ABS", 25.0)
     cycle_tol_speed_pct: float = _env_float("CYCLE_TOL_SPEED_PCT", 0.02)
 
+    # v3.2: baseline de ciclo protegido y cuarentena de regimenes nuevos.
+    cycle_baseline_mode: str = os.getenv("CYCLE_BASELINE_MODE", "protected_frozen").strip().lower()
+    cycle_baseline_dir: str = os.getenv("CYCLE_BASELINE_DIR", "artifacts")
+    cycle_baseline_accept_max_signature: float = _env_float(
+        "CYCLE_BASELINE_ACCEPT_MAX_SIGNATURE", 39.0
+    )
+    cycle_baseline_max_ml_fraction: float = _env_float(
+        "CYCLE_BASELINE_MAX_ML_FRACTION", 0.20
+    )
+    cycle_baseline_bootstrap_min_cycles: int = _env_int(
+        "CYCLE_BASELINE_BOOTSTRAP_MIN_CYCLES", 20
+    )
+
+    new_regime_min_consecutive_cycles: int = _env_int(
+        "NEW_REGIME_MIN_CONSECUTIVE_CYCLES", 5
+    )
+    new_regime_signature_top_metrics: int = _env_int(
+        "NEW_REGIME_SIGNATURE_TOP_METRICS", 2
+    )
+    new_regime_max_gap_minutes: float = _env_float("NEW_REGIME_MAX_GAP_MINUTES", 15.0)
+
+    # v3.2: ciclo parcial por arranque cerca del setpoint superior.
+    cycle_partial_start_setpoint_margin: float = _env_float(
+        "CYCLE_PARTIAL_START_SETPOINT_MARGIN", 5.0
+    )
+    cycle_partial_end_setpoint_margin: float = _env_float(
+        "CYCLE_PARTIAL_END_SETPOINT_MARGIN", 3.0
+    )
+    cycle_partial_max_duration_seconds: float = _env_float(
+        "CYCLE_PARTIAL_MAX_DURATION_SECONDS", 60.0
+    )
+
     # SQL Server.
     sql_driver: str = os.getenv("SQL_DRIVER", "ODBC Driver 17 for SQL Server")
     sql_server: str = os.getenv("SQL_SERVER", r"USER4710-PC\SQLEXPRESS").strip()
@@ -147,6 +192,11 @@ class Settings:
     @property
     def data_file_path(self) -> Path:
         p = Path(self.data_file)
+        return p if p.is_absolute() else BASE_DIR / p
+
+    @property
+    def cycle_baseline_dir_path(self) -> Path:
+        p = Path(self.cycle_baseline_dir)
         return p if p.is_absolute() else BASE_DIR / p
 
 
