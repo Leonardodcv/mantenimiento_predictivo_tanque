@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 import pandas as pd
 from fastapi import FastAPI, HTTPException, Query
@@ -16,9 +16,9 @@ from app.services.controlled_trials import load_controlled_trials_catalog
 
 app = FastAPI(
     title=settings.app_name,
-    version="5.0.1",
+    version="5.0.2",
     description=(
-        "Backend v5.0.1 para mantenimiento predictivo del tanque. Conserva el contexto fisico v5.0, "
+        "Backend v5.0.2 para mantenimiento predictivo del tanque. Conserva el contexto fisico v5.0, "
         "incorpora ground truth de pruebas controladas sin convertirlas en fallas reales, protege el entrenamiento ML, "
         "documenta dos sensores fisicos pero usa un solo canal de presion activo (sensor superior), mantiene velocidad VFD como RAW "
         "y usa la bomba PK60 solo como referencia teorica no causal."
@@ -33,7 +33,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-API_VERSION = "5.0.1"
+API_VERSION = "5.0.2"
 SOURCE_PATTERN = "^(file|sqlserver)$"
 EVENT_SCOPE_PATTERN = "^(recent|full)$"
 
@@ -192,6 +192,7 @@ def health():
         "groups_regime_episodes_into_families": True,
         "includes_equipment_context_from_photos_and_tia": True,
         "supports_controlled_test_ground_truth": settings.controlled_trials_enabled,
+        "supports_hour_based_anomaly_timeline": True,
         "controlled_tests_excluded_from_normal_training": settings.controlled_trials_exclude_session_from_training,
         "controlled_tests_are_not_real_failures": True,
         "two_pressure_sensor_topology_known": True,
@@ -293,6 +294,64 @@ def anomaly_history(
         "count": int(len(data)),
         "data": dataframe_records(data[cols]),
     }
+
+
+@app.get("/api/v5/anomalies/timeline/")
+def anomaly_timeline(
+    hours: float = Query(..., gt=0.0, description="Cantidad de horas hacia atras desde el ultimo registro disponible."),
+    source: str = Query(default=settings.data_source, pattern=SOURCE_PATTERN),
+):
+    """Devuelve un punto por cada lectura de la ventana: momento + indice de anomalia."""
+    if hours > settings.anomaly_timeline_max_hours:
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                f"hours excede el maximo permitido ({settings.anomaly_timeline_max_hours:g} h). "
+                "Aumenta ANOMALY_TIMELINE_MAX_HOURS si necesitas una ventana mayor."
+            ),
+        )
+
+    try:
+        scored, start, end = model_manager.score_time_window(source, hours=hours)
+        cols = [
+            c
+            for c in ["id", "fecha_hora", "indice_anomalia", "nivel_anomalia"]
+            if c in scored.columns
+        ]
+        records = dataframe_records(scored[cols]) if cols else []
+        data = []
+        for record in records:
+            item = {
+                "momento_comparacion": record.get("fecha_hora"),
+                "indice_anomalia": record.get("indice_anomalia"),
+            }
+            if "id" in record:
+                item["id"] = record.get("id")
+            if "nivel_anomalia" in record:
+                item["nivel_anomalia"] = record.get("nivel_anomalia")
+            data.append(item)
+
+        return {
+            "api_version": API_VERSION,
+            "model_version": MODEL_VERSION,
+            "source": source,
+            "momento_ejecucion": datetime.now(timezone.utc).isoformat(),
+            "horas_solicitadas": float(hours),
+            "ventana": {
+                "desde": None if start is None else pd.Timestamp(start).isoformat(),
+                "hasta": None if end is None else pd.Timestamp(end).isoformat(),
+                "referencia_hasta": "ULTIMO_REGISTRO_DISPONIBLE",
+            },
+            "base_comparacion": "MODELO_PROTEGIDO_ACTUAL",
+            "count": int(len(data)),
+            "data": data,
+            "warning": (
+                "indice_anomalia mide rareza/distancia respecto al comportamiento aprendido: "
+                "0 es cercano a lo normal y 100 es muy atipico. No es probabilidad de falla."
+            ),
+        }
+    except DataSourceError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
 
 
 @app.get("/api/v5/anomalies/explain/{record_id}")

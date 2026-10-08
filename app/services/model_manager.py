@@ -20,7 +20,7 @@ from app.services.anomaly_engine_v5 import (
     cycle_baseline_summary,
     variable_coverage,
 )
-from app.services.data_source import load_full, load_latest
+from app.services.data_source import load_full, load_latest, load_time_window
 from app.services.controlled_trials import validate_controlled_trials
 
 
@@ -207,6 +207,22 @@ class ModelManager:
         raw = load_latest(source, limit=limit, context_rows=context)
         scored = snapshot.engine.score(raw)
         return scored.tail(limit).reset_index(drop=True)
+
+    def score_time_window(
+        self, source: str, hours: float
+    ) -> tuple[pd.DataFrame, pd.Timestamp | None, pd.Timestamp | None]:
+        """Puntua cada lectura de las ultimas `hours` horas contra el modelo protegido actual."""
+        source = source.strip().lower()
+        snapshot = self.get(source)
+        raw, start, end = load_time_window(
+            source, hours=hours, context_rows=settings.latest_context_rows
+        )
+        if raw.empty or start is None or end is None:
+            return raw, start, end
+
+        scored = snapshot.engine.score(raw)
+        mask = (scored["fecha_hora"] >= start) & (scored["fecha_hora"] <= end)
+        return scored.loc[mask].reset_index(drop=True), start, end
 
     def events(
         self,

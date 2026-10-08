@@ -1,8 +1,8 @@
-# Mantenimiento Predictivo del Tanque - Backend v5.0.1
+# Mantenimiento Predictivo del Tanque - Backend v5.0.2
 
 Backend FastAPI para deteccion de anomalias, analisis de ciclos y validacion de pruebas controladas del banco hidraulico.
 
-La v5.0.1 conserva todo lo desarrollado en v5.0 y ajusta el contexto de presion de la demo actual. La capa formal de **ground truth** sigue basada en la bitacora de pruebas del 8 de octubre de 2026. Esas pruebas son maniobras deliberadas: se usan para validar el detector, pero **no se consideran fallas reales** y no pueden contaminar el entrenamiento normal ni el baseline protegido.
+La v5.0.2 conserva todo lo desarrollado en v5.0.1 y agrega una consulta temporal para obtener el indice de anomalia de cada lectura de las ultimas N horas. La capa formal de **ground truth** sigue basada en la bitacora de pruebas del 8 de octubre de 2026. Esas pruebas son maniobras deliberadas: se usan para validar el detector, pero **no se consideran fallas reales** y no pueden contaminar el entrenamiento normal ni el baseline protegido.
 
 ## Principios
 
@@ -49,6 +49,40 @@ excluir_baseline_normal
 ```
 
 Las etiquetas solo aparecen cuando el timestamp cae dentro de una ventana anotada. La exclusion de entrenamiento/baseline se aplica a toda la sesion.
+
+## Serie temporal del indice de anomalia
+
+Para graficar la evolucion del score por hora/ventana:
+
+```text
+GET /api/v5/anomalies/timeline/?source=sqlserver&hours=6
+```
+
+La ventana termina en el ultimo `fecha_hora` disponible, no en la hora del servidor. El backend usa registros anteriores como contexto para calcular correctamente fases y transiciones, pero la respuesta contiene unicamente las lecturas incluidas en las horas solicitadas.
+
+Respuesta simplificada:
+
+```json
+{
+  "horas_solicitadas": 6.0,
+  "ventana": {
+    "desde": "2026-10-08T04:00:00",
+    "hasta": "2026-10-08T10:00:00",
+    "referencia_hasta": "ULTIMO_REGISTRO_DISPONIBLE"
+  },
+  "base_comparacion": "MODELO_PROTEGIDO_ACTUAL",
+  "data": [
+    {
+      "momento_comparacion": "2026-10-08T09:59:58",
+      "indice_anomalia": 12.4,
+      "id": 131255,
+      "nivel_anomalia": "BAJO"
+    }
+  ]
+}
+```
+
+`indice_anomalia` sigue siendo rareza/distancia respecto al comportamiento aprendido, no probabilidad de falla. La ventana solicitada no reentrena ni redefine el baseline. El maximo por defecto es 168 horas y se puede ajustar con `ANOMALY_TIMELINE_MAX_HOURS`.
 
 ## Validacion del detector
 

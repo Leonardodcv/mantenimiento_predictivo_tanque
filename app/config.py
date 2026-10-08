@@ -33,7 +33,7 @@ def _env_bool(name: str, default: bool = False) -> bool:
 
 @dataclass(frozen=True)
 class Settings:
-    app_name: str = os.getenv("APP_NAME", "Mantenimiento Predictivo Tanque API v5.0")
+    app_name: str = os.getenv("APP_NAME", "Mantenimiento Predictivo Tanque API v5.0.2")
     app_env: str = os.getenv("APP_ENV", "development")
     host: str = os.getenv("APP_HOST", "0.0.0.0")
     port: int = _env_int("APP_PORT", 8002)
@@ -54,6 +54,8 @@ class Settings:
     latest_context_rows: int = _env_int("LATEST_CONTEXT_ROWS", 2000)
     default_limit: int = _env_int("ANOMALY_DEFAULT_LIMIT", 500)
     cycle_default_limit: int = _env_int("CYCLE_DEFAULT_LIMIT", 20)
+    # v5.0.2: limite de seguridad para el endpoint temporal sin downsampling.
+    anomaly_timeline_max_hours: float = _env_float("ANOMALY_TIMELINE_MAX_HOURS", 168.0)
 
     # Fases principales.
     movement_speed_threshold: float = _env_float("MOVEMENT_SPEED_THRESHOLD", 20.0)

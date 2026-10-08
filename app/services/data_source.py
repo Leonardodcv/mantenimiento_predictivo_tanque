@@ -137,6 +137,74 @@ def read_sqlserver_latest(limit: int, context_rows: int = 0) -> pd.DataFrame:
     return normalize_frame(df)
 
 
+def read_file_time_window(hours: float, context_rows: int = 0) -> tuple[pd.DataFrame, pd.Timestamp | None, pd.Timestamp | None]:
+    """Lee las ultimas `hours` horas del archivo, mas contexto previo para calcular fases."""
+    full = read_file()
+    if full.empty:
+        return full, None, None
+
+    end = pd.Timestamp(full["fecha_hora"].max())
+    start = end - pd.Timedelta(hours=float(hours))
+    window = full.loc[
+        (full["fecha_hora"] >= start) & (full["fecha_hora"] <= end)
+    ].copy()
+
+    if context_rows > 0:
+        context = full.loc[full["fecha_hora"] < start].tail(int(context_rows)).copy()
+        data = pd.concat([context, window], ignore_index=True)
+    else:
+        data = window
+    return normalize_frame(data), start, end
+
+
+def read_sqlserver_time_window(
+    hours: float, context_rows: int = 0
+) -> tuple[pd.DataFrame, pd.Timestamp | None, pd.Timestamp | None]:
+    """Lee una ventana temporal terminada en el ultimo registro disponible de SQL Server."""
+    table = _validated_table()
+    try:
+        with _connect() as conn:
+            bounds = pd.read_sql_query(
+                f"SELECT MAX(fecha_hora) AS hasta FROM {table};", conn
+            )
+            if bounds.empty or pd.isna(bounds.iloc[0]["hasta"]):
+                return pd.DataFrame(), None, None
+
+            end = pd.Timestamp(bounds.iloc[0]["hasta"])
+            start = end - pd.Timedelta(hours=float(hours))
+            window_ms = max(1, int(round(float(hours) * 60.0 * 60.0 * 1000.0)))
+
+            # La ventana se calcula dentro de SQL a partir del MAX(fecha_hora),
+            # evitando perder precision de datetime2 al convertir timestamps a datetime de Python.
+            window_query = (
+                f"WITH b AS (SELECT MAX(fecha_hora) AS hasta FROM {table}) "
+                f"SELECT t.* FROM {table} AS t CROSS JOIN b "
+                f"WHERE t.fecha_hora >= DATEADD(millisecond, -{window_ms}, b.hasta) "
+                "AND t.fecha_hora <= b.hasta ORDER BY t.fecha_hora ASC, t.id ASC;"
+            )
+            window = pd.read_sql_query(window_query, conn)
+
+            if context_rows > 0:
+                context_query = (
+                    f"WITH b AS (SELECT MAX(fecha_hora) AS hasta FROM {table}) "
+                    f"SELECT TOP ({int(context_rows)}) t.* FROM {table} AS t CROSS JOIN b "
+                    f"WHERE t.fecha_hora < DATEADD(millisecond, -{window_ms}, b.hasta) "
+                    "ORDER BY t.fecha_hora DESC, t.id DESC;"
+                )
+                context = pd.read_sql_query(context_query, conn)
+                if not context.empty:
+                    context = context.iloc[::-1].reset_index(drop=True)
+                    data = pd.concat([context, window], ignore_index=True)
+                else:
+                    data = window
+            else:
+                data = window
+    except Exception as exc:
+        raise DataSourceError(f"Error consultando ventana temporal en SQL Server: {exc}") from exc
+
+    return normalize_frame(data), start, end
+
+
 def sqlserver_metadata() -> dict:
     table = _validated_table()
     query = (
@@ -169,6 +237,19 @@ def load_full(source: str) -> pd.DataFrame:
         return read_file(limit=settings.model_max_rows or None)
     if source == "sqlserver":
         return read_sqlserver_full(max_rows=settings.model_max_rows)
+    raise DataSourceError("source debe ser 'file' o 'sqlserver'.")
+
+
+def load_time_window(
+    source: str, hours: float, context_rows: int = 0
+) -> tuple[pd.DataFrame, pd.Timestamp | None, pd.Timestamp | None]:
+    source = (source or settings.data_source).strip().lower()
+    if hours <= 0:
+        raise DataSourceError("hours debe ser mayor que 0.")
+    if source == "file":
+        return read_file_time_window(hours=hours, context_rows=context_rows)
+    if source == "sqlserver":
+        return read_sqlserver_time_window(hours=hours, context_rows=context_rows)
     raise DataSourceError("source debe ser 'file' o 'sqlserver'.")
 
 
