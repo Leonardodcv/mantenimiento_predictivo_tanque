@@ -1,0 +1,72 @@
+{
+  "model_version": "v5.0-controlled-ground-truth-hydraulic-topology",
+  "baseline": {
+    "modo_baseline": "PROTECTED_FROZEN",
+    "baseline_congelado": true,
+    "baseline_created_at": null,
+    "baseline_source": null,
+    "ciclos_baseline_confiables": 43,
+    "ciclos_cuarentena": 5,
+    "ciclos_excluidos_baseline": 15,
+    "ciclos_parciales_nivel_inicial": 0,
+    "restart_long_stop_hours": 2.0,
+    "restart_stabilization_cycles": 4,
+    "cycle_ml_integral_threshold": 70.0,
+    "cycle_ml_persistence_fraction": 0.25,
+    "cycle_ml_persistence_seconds": 30.0,
+    "cycle_transient_ml_cap": 39.0,
+    "max_signature_for_baseline_trust": 39.0,
+    "metricas": {
+      "duracion_movimiento_seg": {
+        "mediana": 94.07,
+        "p05": 88.489,
+        "p95": 98.052,
+        "mad": 2.25,
+        "tolerancia_ingenieria": 7.5256,
+        "muestras": 43
+      },
+      "nivel_inicio": {
+        "mediana": 39.7208,
+        "p05": 38.7677,
+        "p95": 39.9085,
+        "mad": 0.1194,
+        "tolerancia_ingenieria": 2.5,
+        "muestras": 43
+      },
+      "nivel_fin": {
+        "mediana": 82.4255,
+        "p05": 81.0634,
+        "p95": 83.176,
+        "mad": 0.2785,
+        "tolerancia_ingenieria": 3.297,
+        "muestras": 43
+      },
+      "flujo_estable_mediana": {
+        "mediana": 18.4136,
+        "p05": 18.1398,
+        "p95": 18.5574,
+        "mad": 0.0543,
+        "tolerancia_ingenieria": 0.5524,
+        "muestras": 43
+      },
+      "presion_estable_mediana": {
+        "mediana": 8.4744,
+        "p05": 8.3607,
+        "p95": 8.7489,
+        "mad": 0.0597,
+        "tolerancia_ingenieria": 0.35,
+        "muestras": 43
+      },
+      "velocidad_estable_mediana": {
+        "mediana": 1198.0,
+        "p05": 1197.0,
+        "p95": 1199.0,
+        "mad": 0.5,
+        "tolerancia_ingenieria": 25.0,
+        "muestras": 43
+      }
+    },
+    "nuevos_regimenes_candidatos": [],
+    "familias_regimen_candidatas": []
+  }
+}

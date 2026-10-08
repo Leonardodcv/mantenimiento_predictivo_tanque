@@ -7,19 +7,20 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.services.anomaly_engine_v4 import MODEL_VERSION, dataframe_records
+from app.services.anomaly_engine_v5 import MODEL_VERSION, dataframe_records
 from app.services.data_source import DataSourceError, sqlserver_metadata
 from app.services.model_manager import model_manager
 from app.services.equipment_context import EQUIPMENT_CONTEXT, pump_expected_head_from_nameplate
+from app.services.controlled_trials import load_controlled_trials_catalog
 
 
 app = FastAPI(
     title=settings.app_name,
-    version="4.0.0",
+    version="5.0.0",
     description=(
-        "Backend v4.0 para mantenimiento predictivo del tanque. Agrega contexto fisico del banco, "
-        "protege tambien el entrenamiento ML activo, agrupa episodios en familias de regimen, "
-        "trata velocidad del VFD como RAW hasta confirmar escalado y usa la bomba PK60 solo como "
+        "Backend v5.0 para mantenimiento predictivo del tanque. Conserva el contexto fisico v4, "
+        "incorpora ground truth de pruebas controladas sin convertirlas en fallas reales, protege el entrenamiento ML, "
+        "modela la topologia de dos sensores de presion, mantiene velocidad VFD como RAW y usa la bomba PK60 solo como "
         "referencia teorica no causal."
     ),
 )
@@ -32,7 +33,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-API_VERSION = "4.0.0"
+API_VERSION = "5.0.0"
 SOURCE_PATTERN = "^(file|sqlserver)$"
 EVENT_SCOPE_PATTERN = "^(recent|full)$"
 
@@ -74,6 +75,17 @@ def _cols_for_frontend(df: pd.DataFrame) -> list[str]:
         "metodo_explicacion_ml",
         "explicacion_ml_es_causal",
         "variables_mas_atipicas",
+        "es_sesion_pruebas_controladas",
+        "sesion_prueba_controlada_id",
+        "ground_truth_disponible",
+        "ground_truth_ids",
+        "ground_truth_tipos",
+        "ground_truth_categorias",
+        "ground_truth_precision",
+        "ground_truth_falla_real",
+        "ground_truth_manipulacion_sensor",
+        "excluir_entrenamiento_normal",
+        "excluir_baseline_normal",
         "modo_operacion_contextual",
         "estado_proceso_contextual",
         "estado_proceso_fuente",
@@ -88,6 +100,12 @@ def _cols_for_frontend(df: pd.DataFrame) -> list[str]:
         "residuo_presion_vs_modelo_teorico_psi",
         "modelo_bomba_fisico_aplicable",
         "modelo_bomba_fisico_solo_contexto",
+        "sensor_presion_bomba_columna",
+        "sensor_presion_superior_columna",
+        "presion_doble_canal_disponible",
+        "presion_sensor_bomba",
+        "presion_sensor_superior",
+        "delta_presion_bomba_a_superior",
         "flujo_instantaneo",
         "presion_relativa",
         "temperatura_tanque",
@@ -146,7 +164,7 @@ def _snapshot(source: str):
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
-@app.get("/api/v4/health/")
+@app.get("/api/v5/health/")
 def health():
     return {
         "status": "ok",
@@ -168,18 +186,23 @@ def health():
         "uses_protected_active_ml_training": settings.ml_protected_active_training,
         "groups_regime_episodes_into_families": True,
         "includes_equipment_context_from_photos_and_tia": True,
+        "supports_controlled_test_ground_truth": settings.controlled_trials_enabled,
+        "controlled_tests_excluded_from_normal_training": settings.controlled_trials_exclude_session_from_training,
+        "controlled_tests_are_not_real_failures": True,
+        "two_pressure_sensor_topology_known": True,
+        "dual_pressure_columns_configured": bool(settings.pressure_sensor_pump_column and settings.pressure_sensor_tank_column),
         "vfd_velocity_is_raw_until_scaling_confirmed": not settings.velocity_rpm_confirmed,
         "pump_physics_is_diagnostic_only": not settings.pump_physics_use_for_rules,
         "warning": "El indice es anomalia/rareza, no probabilidad de falla.",
     }
 
 
-@app.get("/api/v4/model/status/")
+@app.get("/api/v5/model/status/")
 def model_status(source: str = Query(default=settings.data_source, pattern=SOURCE_PATTERN)):
     return model_manager.status(source)
 
 
-@app.post("/api/v4/model/rebuild/")
+@app.post("/api/v5/model/rebuild/")
 def model_rebuild(
     source: str = Query(default=settings.data_source, pattern=SOURCE_PATTERN),
     reset_cycle_baseline: bool = Query(default=False),
@@ -204,7 +227,7 @@ def model_rebuild(
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
 
-@app.get("/api/v4/anomalies/summary/")
+@app.get("/api/v5/anomalies/summary/")
 def anomaly_summary(source: str = Query(default=settings.data_source, pattern=SOURCE_PATTERN)):
     snap = _snapshot(source)
     return {
@@ -218,7 +241,7 @@ def anomaly_summary(source: str = Query(default=settings.data_source, pattern=SO
     }
 
 
-@app.get("/api/v4/anomalies/latest/")
+@app.get("/api/v5/anomalies/latest/")
 def anomaly_latest(
     source: str = Query(default=settings.data_source, pattern=SOURCE_PATTERN),
     limit: int = Query(default=settings.default_limit, ge=1, le=10000),
@@ -238,7 +261,7 @@ def anomaly_latest(
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
 
-@app.get("/api/v4/anomalies/history/")
+@app.get("/api/v5/anomalies/history/")
 def anomaly_history(
     source: str = Query(default=settings.data_source, pattern=SOURCE_PATTERN),
     desde: datetime | None = Query(default=None),
@@ -262,7 +285,7 @@ def anomaly_history(
     }
 
 
-@app.get("/api/v4/anomalies/explain/{record_id}")
+@app.get("/api/v5/anomalies/explain/{record_id}")
 def anomaly_explain(
     record_id: int,
     source: str = Query(default=settings.data_source, pattern=SOURCE_PATTERN),
@@ -288,7 +311,7 @@ def anomaly_explain(
     }
 
 
-@app.get("/api/v4/anomalies/events/")
+@app.get("/api/v5/anomalies/events/")
 def anomaly_events(
     source: str = Query(default=settings.data_source, pattern=SOURCE_PATTERN),
     threshold: float = Query(default=settings.event_open_threshold, ge=0.0, le=100.0),
@@ -328,7 +351,7 @@ def anomaly_events(
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
 
-@app.get("/api/v4/cycles/latest/")
+@app.get("/api/v5/cycles/latest/")
 def cycles_latest(
     source: str = Query(default=settings.data_source, pattern=SOURCE_PATTERN),
     limit: int = Query(default=settings.cycle_default_limit, ge=1, le=200),
@@ -349,7 +372,7 @@ def cycles_latest(
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
 
-@app.get("/api/v4/cycles/baseline/")
+@app.get("/api/v5/cycles/baseline/")
 def cycles_baseline(source: str = Query(default=settings.data_source, pattern=SOURCE_PATTERN)):
     snap = _snapshot(source)
     return {
@@ -360,7 +383,7 @@ def cycles_baseline(source: str = Query(default=settings.data_source, pattern=SO
     }
 
 
-@app.get("/api/v4/cycles/regime-candidates/")
+@app.get("/api/v5/cycles/regime-candidates/")
 def cycles_regime_candidates(
     source: str = Query(default=settings.data_source, pattern=SOURCE_PATTERN),
 ):
@@ -373,13 +396,13 @@ def cycles_regime_candidates(
         "count": len(candidates),
         "regime_candidates": candidates,
         "note": (
-            "Cada entrada representa un episodio persistente en cuarentena. v4 puede agrupar "
+            "Cada entrada representa un episodio persistente en cuarentena. v5 conserva el agrupamiento de "
             "episodios separados con la misma firma dentro de una familia de regimen."
         ),
     }
 
 
-@app.get("/api/v4/cycles/regime-families/")
+@app.get("/api/v5/cycles/regime-families/")
 def cycles_regime_families(
     source: str = Query(default=settings.data_source, pattern=SOURCE_PATTERN),
 ):
@@ -398,19 +421,20 @@ def cycles_regime_families(
     }
 
 
-@app.get("/api/v4/context/equipment/")
+@app.get("/api/v5/context/equipment/")
 def equipment_context():
     return {
         "model_version": MODEL_VERSION,
         "context": EQUIPMENT_CONTEXT,
         "warning": (
-            "Los estados de las valvulas manuales no se registran en SQL y los escalados finales "
-            "de flujo, presion y velocidad VFD aun deben confirmarse con exportaciones TIA/Modbus."
+            "La topologia de dos sensores de presion esta registrada, pero el dataset actual solo "
+            "expone una columna presion_relativa y no se fuerza su mapeo fisico. Los estados de las "
+            "valvulas manuales tampoco se registran en SQL."
         ),
     }
 
 
-@app.get("/api/v4/context/pump-reference/")
+@app.get("/api/v5/context/pump-reference/")
 def pump_reference(
     flow_l_min: float = Query(ge=0.0),
     frequency_hz: float = Query(gt=0.0, le=100.0),
@@ -426,7 +450,7 @@ def pump_reference(
     }
 
 
-@app.get("/api/v4/variables/status/")
+@app.get("/api/v5/variables/status/")
 def variables_status(source: str = Query(default=settings.data_source, pattern=SOURCE_PATTERN)):
     snap = _snapshot(source)
     return {
@@ -435,3 +459,66 @@ def variables_status(source: str = Query(default=settings.data_source, pattern=S
         "total_registros": int(len(snap.raw_full)),
         "variables": snap.coverage,
     }
+
+@app.get("/api/v5/controlled-tests/catalog/")
+def controlled_tests_catalog():
+    catalog = load_controlled_trials_catalog()
+    return {
+        "model_version": MODEL_VERSION,
+        "catalog": catalog,
+        "warning": (
+            "Las horas de la bitacora tienen precision de minuto. Las ventanas sirven para validacion "
+            "y exclusion del aprendizaje normal; no representan duraciones exactas de las maniobras."
+        ),
+    }
+
+
+@app.get("/api/v5/controlled-tests/validation/")
+def controlled_tests_validation(
+    source: str = Query(default=settings.data_source, pattern=SOURCE_PATTERN),
+    detection_threshold: float = Query(
+        default=settings.controlled_trials_detection_threshold, ge=0.0, le=100.0
+    ),
+):
+    try:
+        snap = _snapshot(source)
+        validation = model_manager.controlled_trials_validation(
+            source, detection_threshold=detection_threshold
+        )
+        return {
+            "model_version": MODEL_VERSION,
+            "source": source,
+            "snapshot_built_at": snap.built_at.isoformat(),
+            "validation": validation,
+            "warning": (
+                "La bitacora se usa como ground truth externo. No modifica el indice del modelo y "
+                "ninguna prueba controlada se considera por si misma una falla real."
+            ),
+        }
+    except DataSourceError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+
+@app.get("/api/v5/controlled-tests/rows/")
+def controlled_tests_rows(
+    source: str = Query(default=settings.data_source, pattern=SOURCE_PATTERN),
+    only_annotated: bool = Query(default=False),
+    limit: int = Query(default=10000, ge=1, le=50000),
+):
+    try:
+        snap = _snapshot(source)
+        frame = model_manager.controlled_trials_rows(source)
+        if only_annotated and "ground_truth_disponible" in frame.columns:
+            frame = frame.loc[frame["ground_truth_disponible"].fillna(False).astype(bool)]
+        frame = frame.tail(limit)
+        cols = _cols_for_frontend(frame)
+        return {
+            "model_version": MODEL_VERSION,
+            "source": source,
+            "snapshot_built_at": snap.built_at.isoformat(),
+            "only_annotated": only_annotated,
+            "count": int(len(frame)),
+            "data": dataframe_records(frame[cols]),
+        }
+    except DataSourceError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc

@@ -1,0 +1,396 @@
+{
+  "model_version": "v5.0-controlled-ground-truth-hydraulic-topology",
+  "catalog": {
+    "catalog_version": "v5.0-2026-10-08-minute-ground-truth",
+    "time_basis": "SQL_LOCAL_NAIVE",
+    "principles": {
+      "annotations_are_ground_truth_for_validation": true,
+      "annotations_do_not_change_anomaly_scores": true,
+      "controlled_tests_are_not_real_failures": true,
+      "do_not_assume_recovery_between_annotations": true,
+      "minute_window_is_observation_window_not_exact_test_duration": true
+    },
+    "sessions": [
+      {
+        "session_id": "CT-20261008-AM",
+        "start": "2026-10-08T08:10:00",
+        "end": "2026-10-08T09:28:59.999999",
+        "precision": "MINUTO",
+        "description": "Sesion continua de pruebas hidraulicas controladas y manipulaciones de instrumentacion.",
+        "exclude_from_normal_ml_training": true,
+        "exclude_from_cycle_baseline": true,
+        "reported_real_failure": false,
+        "note": "No se asume funcionamiento normal entre anotaciones; las pruebas se realizaron de forma continua."
+      }
+    ],
+    "annotations": [
+      {
+        "id": "CT-0810",
+        "session_id": "CT-20261008-AM",
+        "start": "2026-10-08T08:10:00",
+        "end": "2026-10-08T08:10:59.999999",
+        "precision": "MINUTO",
+        "type": "LLENADO_NORMAL_CONTROLADO",
+        "category": "CONTROL_NORMAL",
+        "expected_evaluation": "NO_ANOMALIA",
+        "description": "Llenado. Ciclo normal.",
+        "use_for_validation": true
+      },
+      {
+        "id": "CT-0812",
+        "session_id": "CT-20261008-AM",
+        "start": "2026-10-08T08:12:00",
+        "end": "2026-10-08T08:12:59.999999",
+        "precision": "MINUTO",
+        "type": "VACIADO_CONTROLADO",
+        "category": "CONTROL_OPERATIVO",
+        "expected_evaluation": "NO_ANOMALIA",
+        "description": "Vaciado.",
+        "use_for_validation": true
+      },
+      {
+        "id": "CT-0814",
+        "session_id": "CT-20261008-AM",
+        "start": "2026-10-08T08:14:00",
+        "end": "2026-10-08T08:14:59.999999",
+        "precision": "MINUTO",
+        "type": "CAVITACION_CONTROLADA_REPORTADA",
+        "category": "PRUEBA_HIDRAULICA",
+        "expected_evaluation": "ANOMALIA_HIDRAULICA",
+        "description": "Cavitacion reportada durante recirculacion; cambio de presion mediante valvulas.",
+        "manipulations": [
+          "CIERRE_VALVULA_AZUL_SUPERIOR",
+          "CIERRE_VALVULA_TANQUE"
+        ],
+        "use_for_validation": true,
+        "physical_confirmation": "REPORTADA_NO_CONFIRMADA_POR_SENSOR_ESPECIFICO"
+      },
+      {
+        "id": "CT-0820",
+        "session_id": "CT-20261008-AM",
+        "start": "2026-10-08T08:20:00",
+        "end": "2026-10-08T08:20:59.999999",
+        "precision": "MINUTO",
+        "type": "RECIRCULACION_CON_PERDIDA_PRESION",
+        "category": "PRUEBA_HIDRAULICA",
+        "expected_evaluation": "ANOMALIA_HIDRAULICA",
+        "description": "Problema de recirculacion y perdida de presion reportada en ambos sensores.",
+        "use_for_validation": true
+      },
+      {
+        "id": "CT-0822",
+        "session_id": "CT-20261008-AM",
+        "start": "2026-10-08T08:22:00",
+        "end": "2026-10-08T08:22:59.999999",
+        "precision": "MINUTO",
+        "type": "RESTRICCION_CON_AUMENTO_PRESION",
+        "category": "PRUEBA_HIDRAULICA",
+        "expected_evaluation": "ANOMALIA_HIDRAULICA",
+        "description": "Cierre de valvula y aumento de presion; respuesta de flujo distinta a la esperada en la prueba.",
+        "manipulated_component_confirmed": false,
+        "use_for_validation": true
+      },
+      {
+        "id": "CT-0823",
+        "session_id": "CT-20261008-AM",
+        "start": "2026-10-08T08:23:00",
+        "end": "2026-10-08T08:23:59.999999",
+        "precision": "MINUTO",
+        "type": "PERDIDA_FLUJO_OBSTRUCCION_REPORTADA",
+        "category": "PRUEBA_HIDRAULICA",
+        "expected_evaluation": "ANOMALIA_HIDRAULICA",
+        "description": "Perdida de flujo; se abrio una valvula externa y se reporto una valvula obstruida.",
+        "use_for_validation": true
+      },
+      {
+        "id": "CT-0826",
+        "session_id": "CT-20261008-AM",
+        "start": "2026-10-08T08:26:00",
+        "end": "2026-10-08T08:26:59.999999",
+        "precision": "MINUTO",
+        "type": "FUNCIONAMIENTO_NORMAL_CONTROLADO",
+        "category": "CONTROL_NORMAL",
+        "expected_evaluation": "NO_ANOMALIA",
+        "description": "Funcionamiento normal reportado.",
+        "use_for_validation": true
+      },
+      {
+        "id": "CT-0831",
+        "session_id": "CT-20261008-AM",
+        "start": "2026-10-08T08:31:00",
+        "end": "2026-10-08T08:31:59.999999",
+        "precision": "MINUTO",
+        "type": "SIN_ETIQUETA",
+        "category": "SIN_CONTEXTO",
+        "expected_evaluation": "NO_EVALUAR",
+        "description": "Existe registro de hora, pero no hay descripcion asociada.",
+        "use_for_validation": false
+      },
+      {
+        "id": "CT-0832",
+        "session_id": "CT-20261008-AM",
+        "start": "2026-10-08T08:32:00",
+        "end": "2026-10-08T08:32:59.999999",
+        "precision": "MINUTO",
+        "type": "CAMBIO_RECORRIDO_A_RECIRCULACION_CON_BAJA_PRESION",
+        "category": "CAMBIO_REGIMEN_CONTROLADO",
+        "expected_evaluation": "CAMBIO_REGIMEN",
+        "description": "Flujo con poca presion y cambio del recorrido del flujo hacia recirculacion. La referencia a 100% del VFD se ignora por falta de confirmacion.",
+        "ignore_vfd_percentage_note": true,
+        "use_for_validation": true
+      },
+      {
+        "id": "CT-0833",
+        "session_id": "CT-20261008-AM",
+        "start": "2026-10-08T08:33:00",
+        "end": "2026-10-08T08:33:59.999999",
+        "precision": "MINUTO",
+        "type": "PRUEBA_DISPONIBILIDAD_FLUJO_VALVULA_ROJA_PRINCIPAL",
+        "category": "PRUEBA_HIDRAULICA",
+        "expected_evaluation": "CAMBIO_REGIMEN",
+        "description": "Prueba con la valvula roja principal para verificar disponibilidad de flujo.",
+        "manipulations": [
+          "VALVULA_ROJA_PRINCIPAL"
+        ],
+        "use_for_validation": true
+      },
+      {
+        "id": "CT-0834",
+        "session_id": "CT-20261008-AM",
+        "start": "2026-10-08T08:34:00",
+        "end": "2026-10-08T08:34:59.999999",
+        "precision": "MINUTO",
+        "type": "PRUEBA_VALVULA_TANQUE_RECIRCULACION_CORTA",
+        "category": "PRUEBA_HIDRAULICA",
+        "expected_evaluation": "CAMBIO_REGIMEN",
+        "description": "Valvula de tanque abierta; la valvula deriva el flujo al tanque inferior para recirculacion corta. Se observo el comportamiento del nivel.",
+        "manipulations": [
+          "APERTURA_VALVULA_TANQUE"
+        ],
+        "use_for_validation": true
+      },
+      {
+        "id": "CT-0844",
+        "session_id": "CT-20261008-AM",
+        "start": "2026-10-08T08:44:00",
+        "end": "2026-10-08T08:44:59.999999",
+        "precision": "MINUTO",
+        "type": "BAJO_FLUJO_BAJA_PRESION_TRANSICION_FLUJO",
+        "category": "PRUEBA_HIDRAULICA",
+        "expected_evaluation": "ANOMALIA_HIDRAULICA",
+        "description": "Bajo flujo y presion, seguido de aumento de flujo; se busco observar el tiempo contra las variables.",
+        "use_for_validation": true
+      },
+      {
+        "id": "CT-0846",
+        "session_id": "CT-20261008-AM",
+        "start": "2026-10-08T08:46:00",
+        "end": "2026-10-08T08:46:59.999999",
+        "precision": "MINUTO",
+        "type": "CAVITACION_CONTROLADA_REPORTADA",
+        "category": "PRUEBA_HIDRAULICA",
+        "expected_evaluation": "ANOMALIA_HIDRAULICA",
+        "description": "Prueba brusca de cavitacion reportada; flujo cambiante de mucho a muy poco.",
+        "manipulations": [
+          "CIERRE_VALVULA_AZUL_SUPERIOR",
+          "CIERRE_VALVULA_TANQUE"
+        ],
+        "use_for_validation": true,
+        "physical_confirmation": "REPORTADA_NO_CONFIRMADA_POR_SENSOR_ESPECIFICO"
+      },
+      {
+        "id": "CT-0847",
+        "session_id": "CT-20261008-AM",
+        "start": "2026-10-08T08:47:00",
+        "end": "2026-10-08T08:47:59.999999",
+        "precision": "MINUTO",
+        "type": "PRESION_ALTA_POR_RESTRICCION_VALVULA",
+        "category": "PRUEBA_HIDRAULICA",
+        "expected_evaluation": "ANOMALIA_HIDRAULICA",
+        "description": "Presion alta provocada mediante valvula.",
+        "manipulated_component_confirmed": false,
+        "use_for_validation": true
+      },
+      {
+        "id": "CT-0849",
+        "session_id": "CT-20261008-AM",
+        "start": "2026-10-08T08:49:00",
+        "end": "2026-10-08T08:49:59.999999",
+        "precision": "MINUTO",
+        "type": "RECIRCULACION_CONTROLADA",
+        "category": "CAMBIO_REGIMEN_CONTROLADO",
+        "expected_evaluation": "CAMBIO_REGIMEN",
+        "description": "Recirculacion.",
+        "use_for_validation": true
+      },
+      {
+        "id": "CT-0858-0900",
+        "session_id": "CT-20261008-AM",
+        "start": "2026-10-08T08:58:00",
+        "end": "2026-10-08T09:00:59.999999",
+        "precision": "RANGO_MINUTOS",
+        "type": "MANIPULACION_SENSOR_ULTRASONICO",
+        "category": "CALIDAD_DATO_SENSOR",
+        "expected_evaluation": "CALIDAD_DATO",
+        "description": "Movimientos deliberados con el sensor ultrasonico; no deben interpretarse como falla de la maquina.",
+        "sensor": "NIVEL_ULTRASONICO",
+        "use_for_validation": true,
+        "use_for_machine_fault_validation": false
+      },
+      {
+        "id": "CT-0906",
+        "session_id": "CT-20261008-AM",
+        "start": "2026-10-08T09:06:00",
+        "end": "2026-10-08T09:06:59.999999",
+        "precision": "MINUTO",
+        "type": "CAMBIO_PRESION_CONTROLADO",
+        "category": "PRUEBA_HIDRAULICA",
+        "expected_evaluation": "CAMBIO_REGIMEN",
+        "description": "Cambios de presion.",
+        "use_for_validation": true
+      },
+      {
+        "id": "CT-0909",
+        "session_id": "CT-20261008-AM",
+        "start": "2026-10-08T09:09:00",
+        "end": "2026-10-08T09:09:59.999999",
+        "precision": "MINUTO",
+        "type": "AUMENTO_PRESION_Y_NIVEL_ALTO",
+        "category": "PRUEBA_HIDRAULICA",
+        "expected_evaluation": "ANOMALIA_HIDRAULICA",
+        "description": "Aumento de presion en sensor y llenado del tanque a nivel alto.",
+        "use_for_validation": true
+      },
+      {
+        "id": "CT-0911",
+        "session_id": "CT-20261008-AM",
+        "start": "2026-10-08T09:11:00",
+        "end": "2026-10-08T09:11:59.999999",
+        "precision": "MINUTO",
+        "type": "CAMBIO_PRESION_CONTROLADO",
+        "category": "PRUEBA_HIDRAULICA",
+        "expected_evaluation": "CAMBIO_REGIMEN",
+        "description": "Cambio de presion.",
+        "use_for_validation": true
+      },
+      {
+        "id": "CT-0912",
+        "session_id": "CT-20261008-AM",
+        "start": "2026-10-08T09:12:00",
+        "end": "2026-10-08T09:12:59.999999",
+        "precision": "MINUTO",
+        "type": "VALVULA_ROJA_PRINCIPAL_CERRADA",
+        "category": "PRUEBA_HIDRAULICA",
+        "expected_evaluation": "ANOMALIA_HIDRAULICA",
+        "description": "Valvula roja principal/superior cerrada segun bitacora.",
+        "manipulations": [
+          "CIERRE_VALVULA_ROJA_PRINCIPAL"
+        ],
+        "use_for_validation": true
+      },
+      {
+        "id": "CT-0913-A",
+        "session_id": "CT-20261008-AM",
+        "start": "2026-10-08T09:13:00",
+        "end": "2026-10-08T09:13:59.999999",
+        "precision": "MINUTO",
+        "type": "BAJO_FLUJO_CON_ASCENSO_NIVEL",
+        "category": "PRUEBA_HIDRAULICA",
+        "expected_evaluation": "ANOMALIA_HIDRAULICA",
+        "description": "Bajo flujo con ascenso del agua reportado.",
+        "use_for_validation": true
+      },
+      {
+        "id": "CT-0913-B",
+        "session_id": "CT-20261008-AM",
+        "start": "2026-10-08T09:13:00",
+        "end": "2026-10-08T09:13:59.999999",
+        "precision": "MINUTO",
+        "type": "BAJO_FLUJO_VACIADO_RECIRCULACION",
+        "category": "PRUEBA_HIDRAULICA",
+        "expected_evaluation": "ANOMALIA_HIDRAULICA",
+        "description": "Bajo flujo, vaciado del tanque y recirculacion reportados en el mismo minuto.",
+        "use_for_validation": true
+      },
+      {
+        "id": "CT-0919",
+        "session_id": "CT-20261008-AM",
+        "start": "2026-10-08T09:19:00",
+        "end": "2026-10-08T09:19:59.999999",
+        "precision": "MINUTO",
+        "type": "PRESION_ALTA_DOS_SENSORES_POR_CIERRE_VALVULAS",
+        "category": "PRUEBA_HIDRAULICA",
+        "expected_evaluation": "ANOMALIA_HIDRAULICA",
+        "description": "Presion alta reportada en ambos sensores durante cierre de valvulas; posteriormente se regula la presion.",
+        "uses_both_pressure_sensors": true,
+        "use_for_validation": true
+      },
+      {
+        "id": "CT-0920",
+        "session_id": "CT-20261008-AM",
+        "start": "2026-10-08T09:20:00",
+        "end": "2026-10-08T09:20:59.999999",
+        "precision": "MINUTO",
+        "type": "EVENTO_COMPUESTO_OBSTRUCCION_PERDIDA_FLUJO_PRESION_RECIRCULACION",
+        "category": "PRUEBA_HIDRAULICA",
+        "expected_evaluation": "ANOMALIA_HIDRAULICA",
+        "description": "Presion alta en el sensor ubicado entre bomba y valvula superior naranja, obstruccion reportada, perdida total de flujo y presion en ambos sensores y recirculacion interna durante el mismo minuto.",
+        "uses_both_pressure_sensors": true,
+        "use_for_validation": true,
+        "note": "La secuencia interna dentro del minuto no se conoce y no se fuerza un orden artificial."
+      },
+      {
+        "id": "CT-0924",
+        "session_id": "CT-20261008-AM",
+        "start": "2026-10-08T09:24:00",
+        "end": "2026-10-08T09:24:59.999999",
+        "precision": "MINUTO",
+        "type": "RECUPERACION_PRESION",
+        "category": "RECUPERACION_CONTROLADA",
+        "expected_evaluation": "TRANSICION_RECUPERACION",
+        "description": "Devolucion/recuperacion de presion.",
+        "use_for_validation": true
+      },
+      {
+        "id": "CT-0925",
+        "session_id": "CT-20261008-AM",
+        "start": "2026-10-08T09:25:00",
+        "end": "2026-10-08T09:25:59.999999",
+        "precision": "MINUTO",
+        "type": "FUNCIONAMIENTO_NORMAL_CONTROLADO",
+        "category": "CONTROL_NORMAL",
+        "expected_evaluation": "NO_ANOMALIA",
+        "description": "Aumento de presion seguido de funcionamiento normal reportado.",
+        "use_for_validation": true,
+        "note": "Solo se considera control normal dentro de esta anotacion; no se extiende automaticamente a los minutos vecinos."
+      },
+      {
+        "id": "CT-0926",
+        "session_id": "CT-20261008-AM",
+        "start": "2026-10-08T09:26:00",
+        "end": "2026-10-08T09:26:59.999999",
+        "precision": "MINUTO",
+        "type": "RECIRCULACION_CORTA_INTERNA",
+        "category": "CAMBIO_REGIMEN_CONTROLADO",
+        "expected_evaluation": "CAMBIO_REGIMEN",
+        "description": "Recirculacion en tuberia interna/corta hacia el tanque inferior.",
+        "manipulations": [
+          "VALVULA_TANQUE"
+        ],
+        "use_for_validation": true
+      },
+      {
+        "id": "CT-0928",
+        "session_id": "CT-20261008-AM",
+        "start": "2026-10-08T09:28:00",
+        "end": "2026-10-08T09:28:59.999999",
+        "precision": "MINUTO",
+        "type": "PRUEBAS_ADICIONALES_FUERA_PLAN_EN_REPOSO",
+        "category": "FUERA_PLAN",
+        "expected_evaluation": "NO_EVALUAR",
+        "description": "Pruebas adicionales sin relacion con las pruebas planeadas; estado de reposo.",
+        "use_for_validation": false
+      }
+    ]
+  }
+}

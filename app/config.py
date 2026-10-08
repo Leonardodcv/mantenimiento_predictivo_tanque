@@ -33,7 +33,7 @@ def _env_bool(name: str, default: bool = False) -> bool:
 
 @dataclass(frozen=True)
 class Settings:
-    app_name: str = os.getenv("APP_NAME", "Mantenimiento Predictivo Tanque API v4.0")
+    app_name: str = os.getenv("APP_NAME", "Mantenimiento Predictivo Tanque API v5.0")
     app_env: str = os.getenv("APP_ENV", "development")
     host: str = os.getenv("APP_HOST", "0.0.0.0")
     port: int = _env_int("APP_PORT", 8002)
@@ -193,6 +193,27 @@ class Settings:
     # bajo una misma familia (por ejemplo flujo alto + presion baja).
     regime_family_enabled: bool = _env_bool("REGIME_FAMILY_ENABLED", True)
 
+
+    # v5.0: bitacora de pruebas controladas / ground truth.
+    controlled_trials_enabled: bool = _env_bool("CONTROLLED_TRIALS_ENABLED", True)
+    controlled_trials_file: str = os.getenv(
+        "CONTROLLED_TRIALS_FILE", "data/controlled_trials_2026-10-08.json"
+    )
+    controlled_trials_exclude_session_from_training: bool = _env_bool(
+        "CONTROLLED_TRIALS_EXCLUDE_SESSION_FROM_TRAINING", True
+    )
+    controlled_trials_exclude_session_from_baseline: bool = _env_bool(
+        "CONTROLLED_TRIALS_EXCLUDE_SESSION_FROM_BASELINE", True
+    )
+    controlled_trials_detection_threshold: float = _env_float(
+        "CONTROLLED_TRIALS_DETECTION_THRESHOLD", 70.0
+    )
+
+    # v5.0: topologia de dos sensores de presion. Las columnas fisicas siguen
+    # configurables porque el dataset actual solo expone una columna `presion_relativa`.
+    pressure_sensor_pump_column: str = os.getenv("PRESSURE_SENSOR_PUMP_COLUMN", "").strip()
+    pressure_sensor_tank_column: str = os.getenv("PRESSURE_SENSOR_TANK_COLUMN", "").strip()
+
     # SQL Server.
     sql_driver: str = os.getenv("SQL_DRIVER", "ODBC Driver 17 for SQL Server")
     sql_server: str = os.getenv("SQL_SERVER", r"USER4710-PC\SQLEXPRESS").strip()
@@ -210,6 +231,12 @@ class Settings:
     @property
     def data_file_path(self) -> Path:
         p = Path(self.data_file)
+        return p if p.is_absolute() else BASE_DIR / p
+
+
+    @property
+    def controlled_trials_file_path(self) -> Path:
+        p = Path(self.controlled_trials_file)
         return p if p.is_absolute() else BASE_DIR / p
 
     @property

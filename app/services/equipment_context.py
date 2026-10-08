@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 
-EQUIPMENT_CONTEXT_VERSION = "2026-10-07-photo-tia-context-1"
+EQUIPMENT_CONTEXT_VERSION = "2026-10-08-controlled-tests-hydraulic-topology-2"
 M_H2O_TO_PSI = 1.4223343308
 
 
@@ -36,8 +36,8 @@ EQUIPMENT_CONTEXT: dict[str, Any] = {
             "method": "linearizacion_extremos_placa_mas_leyes_afinidad",
             "diagnostic_only": True,
             "reason": (
-                "La placa aporta extremos Q/H, no la curva completa. Ademas la ubicacion de la toma "
-                "de presion y las perdidas de la instalacion aun no estan modeladas."
+                "La placa aporta extremos Q/H, no la curva completa. La instalacion y la ubicacion "
+                "exacta de las dos tomas de presion aun no estan incorporadas a un modelo de perdidas."
             ),
         },
     },
@@ -58,15 +58,36 @@ EQUIPMENT_CONTEXT: dict[str, Any] = {
             "configured_range_confirmed": False,
         },
         "pressure": {
-            "manufacturer": "Endress+Hauser",
-            "family_model": "Cerabar M PMP51",
-            "source": "fotografia_placa",
+            "count_confirmed": 2,
+            "source": "fotografia_y_confirmacion_usuario",
+            "family_model": "Endress+Hauser Cerabar M PMP51",
             "signal": "4-20 mA HART",
             "supply_vdc": [11.5, 45.0],
             "mwp_psi": 400.5,
             "nameplate_span_psi": [7.5, 150.0],
             "configured_range_confirmed": False,
-            "note": "El span de placa no se toma automaticamente como rango configurado del PLC.",
+            "sensors": {
+                "sensor_superior": {
+                    "location": "entre_valvula_azul_superior_y_tanque",
+                    "role": "presion_hacia_tanque_despues_de_restriccion_superior",
+                    "database_column_confirmed": False,
+                },
+                "sensor_bomba": {
+                    "location": "entre_bomba_y_valvula_superior_naranja",
+                    "role": "presion_cercana_a_descarga_de_bomba_antes_de_valvula_superior_naranja",
+                    "database_column_confirmed": False,
+                    "note": "Es el sensor previamente descrito por el usuario.",
+                },
+            },
+            "database_mapping": {
+                "available_current_column": "presion_relativa",
+                "physical_sensor_mapping_confirmed": False,
+                "second_numeric_channel_available_in_provided_dataset": False,
+                "note": (
+                    "El dataset proporcionado contiene una sola columna de presion. v5 conserva la "
+                    "topologia de dos sensores, pero no calcula delta de presion hasta disponer de ambas senales."
+                ),
+            },
         },
         "flow": {
             "source": "fotografia_instalacion",
@@ -78,20 +99,62 @@ EQUIPMENT_CONTEXT: dict[str, Any] = {
     "manual_valves": {
         "instrumented": False,
         "main_red": {
-            "role": "habilitar_paso_principal_del_circuito",
+            "role": "paso_principal_de_la_bomba_hacia_el_tanque",
             "normal_operating_position": "ABIERTA",
+            "used_in_controlled_tests": True,
+            "source": "confirmacion_usuario",
+        },
+        "upper_blue": {
+            "location": "antes_del_sensor_de_presion_superior",
+            "roles": [
+                "restriccion_manual_de_flujo_y_presion_hacia_sensor_superior",
+                "valvula_azul_del_circuito_manipulada_en_pruebas",
+            ],
+            "used_to_induce_cavitation_reported": True,
+            "instrumented": False,
             "source": "confirmacion_usuario",
         },
         "blue_drain_valves": {
             "count": 2,
             "role": "drenaje_manual_del_circuito",
-            "source": "confirmacion_usuario",
             "normal_operating_position_confirmed": False,
+            "source": "confirmacion_usuario_previa",
+            "note": "Compatibilidad v4: la azul superior tambien fue confirmada en v5 como valvula de restriccion durante pruebas.",
+        },
+        "tank_valve": {
+            "role": "desviar_flujo_al_tanque_de_almacenamiento_inferior",
+            "hydraulic_effect": "recirculacion_corta",
+            "used_to_induce_cavitation_reported": True,
+            "instrumented": False,
+            "source": "confirmacion_usuario",
+        },
+        "upper_orange": {
+            "location": "despues_del_sensor_de_presion_bomba",
+            "role_confirmed": False,
+            "instrumented": False,
+            "source": "confirmacion_usuario_solo_ubicacion",
+        },
+        "blue_drain_context": {
+            "previous_note": "Las valvulas azules tambien fueron descritas como usadas para sacar agua del circuito.",
+            "v5_clarification": (
+                "La valvula azul superior se usa ademas como restriccion en las pruebas. v5 conserva ambas "
+                "descripciones sin asumir porcentajes de apertura no registrados."
+            ),
         },
         "diagnostic_note": (
-            "Como las valvulas manuales no estan instrumentadas, un cambio de posicion puede alterar "
-            "el punto hidraulico sin quedar registrado en SQL."
+            "Las valvulas manuales no estan instrumentadas. Su manipulacion puede cambiar flujo, presion y "
+            "punto de operacion sin dejar un estado digital en SQL; por eso la bitacora de pruebas es ground truth externo."
         ),
+    },
+    "hydraulic_topology": {
+        "confirmed_segments": [
+            "bomba -> sensor_bomba -> valvula_superior_naranja",
+            "valvula_azul_superior -> sensor_superior -> tanque",
+            "valvula_tanque -> tanque_inferior (recirculacion_corta)",
+            "valvula_roja_principal -> habilita paso principal bomba-hacia-tanque",
+        ],
+        "differential_pressure_possible_when_both_channels_are_available": True,
+        "differential_pressure_currently_available": False,
     },
     "automation": {
         "fill_and_drain": "AUTOMATICO",
@@ -103,6 +166,15 @@ EQUIPMENT_CONTEXT: dict[str, Any] = {
             "El proyecto TIA contiene logica automatica de llenado/vaciado, motor VFD y solenoides. "
             "La codificacion exacta de estado_s1/estado_s2 y start_stop_vfd sigue pendiente de exportar/confirmar."
         ),
+    },
+    "controlled_tests": {
+        "session": "2026-10-08 08:10-09:28",
+        "time_precision": "MINUTO",
+        "real_failures": False,
+        "use": "VALIDACION_Y_EXCLUSION_DE_APRENDIZAJE_NORMAL",
+        "no_assumed_recovery_between_annotations": True,
+        "cavitation_reported_manipulation": ["CIERRE_VALVULA_AZUL_SUPERIOR", "CIERRE_VALVULA_TANQUE"],
+        "sensor_manipulation_interval": "2026-10-08 08:58-09:00",
     },
     "units_and_scaling": {
         "velocity_column": {
@@ -117,8 +189,8 @@ EQUIPMENT_CONTEXT: dict[str, Any] = {
         "flow_l_min_confirmed": False,
         "pressure_psi_confirmed": False,
         "note": (
-            "El modelo fisico de bomba usa provisionalmente las magnitudes de flujo/presion tal como se han "
-            "interpretado en el banco, pero no las convierte en reglas de falla hasta confirmar escalados TIA."
+            "El modelo fisico de bomba usa provisionalmente las magnitudes de flujo/presion como contexto, "
+            "pero no las convierte en reglas de falla hasta confirmar escalados TIA."
         ),
     },
 }

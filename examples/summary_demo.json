@@ -1,19 +1,20 @@
 {
-  "model_version": "v2.0-mixed-history-cycle-aware",
+  "model_version": "v5.0-controlled-ground-truth-hydraulic-topology",
   "summary": {
     "total_registros": 5803,
     "desde": "2026-10-02T07:22:52.547344200",
     "hasta": "2026-10-05T14:11:34.612908300",
-    "indice_actual": 9.14,
+    "indice_actual": 6.78,
     "indice_maximo": 100.0,
-    "indice_promedio": 18.58,
-    "registros_indice_alto": 250,
-    "registros_indice_muy_alto": 108,
+    "indice_promedio": 16.67,
+    "registros_indice_alto": 140,
+    "registros_indice_muy_alto": 150,
+    "registros_indice_alto_o_superior": 290,
     "conteo_por_nivel": {
-      "BAJO": 5340,
-      "MEDIO": 213,
-      "ALTO": 142,
-      "MUY_ALTO": 108
+      "BAJO": 5307,
+      "MEDIO": 206,
+      "MUY_ALTO": 150,
+      "ALTO": 140
     },
     "conteo_por_fase": {
       "REPOSO": 2423,
@@ -22,9 +23,65 @@
       "DESACELERACION": 213,
       "POST_PARO": 320
     },
+    "conteo_por_regimen_modelo": {
+      "REPOSO_ESTATICO": 1000,
+      "REPOSO_TRANSITORIO": 80,
+      "ARRANQUE": 252,
+      "OPERACION_ESTABLE": 2595,
+      "DESACELERACION": 213,
+      "POST_PARO": 320,
+      "VACIADO": 1343
+    },
     "conteo_por_contexto": {
       "LEGACY": 3967,
       "ENRIQUECIDO": 1836
+    },
+    "conteo_por_contexto_ciclo": {
+      "NO_APLICA": 2423,
+      "INICIO_HISTORIAL": 15,
+      "NORMAL": 2923,
+      "REANUDACION": 32,
+      "ESTABILIZACION": 410
+    },
+    "conteo_subestado_reposo": {
+      "REPOSO_ESTATICO": 1000,
+      "REPOSO_TRANSITORIO": 80,
+      "VACIADO": 1343
+    },
+    "conteo_por_origen_deteccion": {
+      "NORMAL": 2847,
+      "ML_MULTIVARIABLE": 256,
+      "ADVERTENCIA": 2666,
+      "REGLA_FISICA_Y_ML": 19,
+      "REGLA_FISICA": 15
+    },
+    "conteo_por_familia_probable": {
+      "TRANSITORIO_ELECTRICO_VFD": 44,
+      "SIN_CLASIFICAR": 9,
+      "DESVIACION_MULTIVARIABLE": 8,
+      "DESVIACION_HIDRAULICA": 79,
+      "TRANSITORIO_ELECTRICO_VFD_CON_RESPUESTA_FISICA": 115,
+      "DESVIACION_ELECTROMECANICA": 1,
+      "DESACOPLAMIENTO_HIDRAULICO": 34
+    },
+    "conteo_por_estado_proceso_contextual": {
+      "REPOSO_ESTATICO": 1000,
+      "REPOSO_TRANSITORIO": 80,
+      "ARRANQUE": 251,
+      "OPERACION_ESTABLE": 97,
+      "LLENADO_INFERIDO_POR_NIVEL": 2696,
+      "POST_PARO": 320,
+      "VACIADO_INFERIDO_POR_NIVEL": 1343,
+      "DESACELERACION": 16
+    },
+    "conteo_por_modo_operacion_contextual": {
+      "MANUAL": 1076,
+      "AUTOMATICO": 4727
+    },
+    "pruebas_controladas": {
+      "records_in_controlled_sessions": 0,
+      "records_with_ground_truth": 0,
+      "records_sensor_manipulation": 0
     },
     "advertencias_presion_alta": 2783
   },
@@ -32,9 +89,25 @@
     "total_rows": 5803,
     "legacy_rows": 3967,
     "enriched_rows": 1836,
+    "regimenes_modelo": {
+      "REPOSO_ESTATICO": 1000,
+      "REPOSO_TRANSITORIO": 80,
+      "ARRANQUE": 252,
+      "OPERACION_ESTABLE": 2595,
+      "DESACELERACION": 213,
+      "POST_PARO": 320,
+      "VACIADO": 1343
+    },
+    "contextos_ciclo": {
+      "NO_APLICA": 2423,
+      "INICIO_HISTORIAL": 15,
+      "NORMAL": 2923,
+      "REANUDACION": 32,
+      "ESTABILIZACION": 410
+    },
     "phases": {
-      "REPOSO": {
-        "training_rows": 2423,
+      "REPOSO_ESTATICO": {
+        "training_rows": 1000,
         "trained": true,
         "features": [
           "flujo_instantaneo",
@@ -43,80 +116,196 @@
           "nivel_tanque",
           "voltaje_bus_dc",
           "tension_l1_n"
-        ]
+        ],
+        "fallback_incluye_contexto_reanudacion": false,
+        "fallback_preserva_exclusion_pruebas_controladas": true,
+        "entrenamiento_activo_protegido": false
       },
-      "ARRANQUE": {
-        "training_rows": 252,
+      "VACIADO": {
+        "training_rows": 1343,
         "trained": true,
         "features": [
           "flujo_instantaneo",
           "presion_relativa",
-          "nivel_tanque",
-          "frecuencia_salida",
-          "velocidad",
-          "voltaje_salida",
-          "voltaje_bus_dc",
-          "tension_l1_n",
-          "corriente_l1",
-          "potencia_activa_l1",
-          "potencia_aparente_l1"
-        ]
-      },
-      "OPERACION_ESTABLE": {
-        "training_rows": 2585,
-        "trained": true,
-        "features": [
-          "flujo_instantaneo",
-          "presion_relativa",
-          "nivel_tanque",
-          "frecuencia_salida",
-          "velocidad",
-          "voltaje_salida",
-          "voltaje_bus_dc",
-          "tension_l1_n",
-          "corriente_l1",
-          "potencia_activa_l1",
-          "potencia_aparente_l1"
-        ]
-      },
-      "DESACELERACION": {
-        "training_rows": 213,
-        "trained": true,
-        "features": [
-          "flujo_instantaneo",
-          "presion_relativa",
-          "nivel_tanque",
-          "frecuencia_salida",
-          "velocidad",
-          "voltaje_salida",
-          "voltaje_bus_dc",
-          "tension_l1_n",
-          "corriente_l1",
-          "potencia_activa_l1",
-          "potencia_aparente_l1"
-        ]
-      },
-      "POST_PARO": {
-        "training_rows": 320,
-        "trained": true,
-        "features": [
-          "flujo_instantaneo",
-          "presion_relativa",
+          "temperatura_tanque",
           "nivel_tanque",
           "voltaje_bus_dc",
           "tension_l1_n"
-        ]
+        ],
+        "fallback_incluye_contexto_reanudacion": false,
+        "fallback_preserva_exclusion_pruebas_controladas": true,
+        "entrenamiento_activo_protegido": false
+      },
+      "ESPERA_CICLO": {
+        "training_rows": 0,
+        "trained": false
+      },
+      "REPOSO_TRANSITORIO": {
+        "training_rows": 80,
+        "trained": true,
+        "features": [
+          "flujo_instantaneo",
+          "presion_relativa",
+          "temperatura_tanque",
+          "nivel_tanque",
+          "voltaje_bus_dc",
+          "tension_l1_n"
+        ],
+        "fallback_incluye_contexto_reanudacion": false,
+        "fallback_preserva_exclusion_pruebas_controladas": true,
+        "entrenamiento_activo_protegido": false
+      },
+      "ARRANQUE": {
+        "training_rows": 154,
+        "trained": true,
+        "features": [
+          "flujo_instantaneo",
+          "presion_relativa",
+          "nivel_tanque",
+          "frecuencia_salida",
+          "velocidad",
+          "voltaje_salida",
+          "voltaje_bus_dc",
+          "tension_l1_n",
+          "corriente_l1",
+          "potencia_activa_l1",
+          "potencia_aparente_l1"
+        ],
+        "fallback_incluye_contexto_reanudacion": false,
+        "fallback_preserva_exclusion_pruebas_controladas": true,
+        "entrenamiento_activo_protegido": true
+      },
+      "OPERACION_ESTABLE": {
+        "training_rows": 1988,
+        "trained": true,
+        "features": [
+          "flujo_instantaneo",
+          "presion_relativa",
+          "nivel_tanque",
+          "frecuencia_salida",
+          "velocidad",
+          "voltaje_salida",
+          "voltaje_bus_dc",
+          "tension_l1_n",
+          "corriente_l1",
+          "potencia_activa_l1",
+          "potencia_aparente_l1"
+        ],
+        "fallback_incluye_contexto_reanudacion": false,
+        "fallback_preserva_exclusion_pruebas_controladas": true,
+        "entrenamiento_activo_protegido": true
+      },
+      "DESACELERACION": {
+        "training_rows": 147,
+        "trained": true,
+        "features": [
+          "flujo_instantaneo",
+          "presion_relativa",
+          "nivel_tanque",
+          "frecuencia_salida",
+          "velocidad",
+          "voltaje_salida",
+          "voltaje_bus_dc",
+          "tension_l1_n",
+          "corriente_l1",
+          "potencia_activa_l1",
+          "potencia_aparente_l1"
+        ],
+        "fallback_incluye_contexto_reanudacion": false,
+        "fallback_preserva_exclusion_pruebas_controladas": true,
+        "entrenamiento_activo_protegido": true
+      },
+      "POST_PARO": {
+        "training_rows": 275,
+        "trained": true,
+        "features": [
+          "flujo_instantaneo",
+          "presion_relativa",
+          "temperatura_tanque",
+          "nivel_tanque",
+          "voltaje_bus_dc",
+          "tension_l1_n"
+        ],
+        "fallback_incluye_contexto_reanudacion": false,
+        "fallback_preserva_exclusion_pruebas_controladas": true,
+        "entrenamiento_activo_protegido": false
       }
     },
     "excluded_variables": {
       "energia_aparente_l1": "valor congelado en PLC; pendiente de correccion",
       "numero_arranques": "contador de arranques manuales, no ciclos automaticos",
       "start_stop_vfd": "significado operativo aun pendiente de confirmar",
-      "start_stop_s1": "contexto de valvula; no predictor numerico por ahora",
-      "start_stop_s2": "contexto de valvula; no predictor numerico por ahora",
+      "start_stop_s1": "contexto de valvula; se usa como contexto, no como predictor numerico",
+      "start_stop_s2": "contexto de valvula; se usa como contexto, no como predictor numerico",
       "estado_s1": "contexto automatico del ciclo",
       "estado_s2": "contexto automatico del ciclo",
       "horas_marcha": "contexto de desgaste acumulado, no rareza instantanea"
+    },
+    "restart_policy": {
+      "long_stop_hours": 2.0,
+      "stabilization_cycles": 4,
+      "ml_cap": 39.0
+    },
+    "explainability_policy": {
+      "min_index": 70.0,
+      "top_features": 8,
+      "min_robust_z": 1.5,
+      "method": "desviacion_robusta_con_piso_fisico_vs_baseline_del_regimen",
+      "uses_physical_scale_floor": true,
+      "causal_attribution": false
+    },
+    "cycle_baseline_policy": {
+      "mode": "protected_frozen",
+      "accept_max_signature": 39.0,
+      "max_ml_high_fraction": 0.2,
+      "bootstrap_min_cycles": 20,
+      "partial_cycles_excluded": true,
+      "new_regime_min_consecutive_cycles": 5
+    },
+    "cycle_health_policy": {
+      "ml_integral_threshold": 70.0,
+      "persistence_fraction": 0.25,
+      "persistence_seconds": 30.0,
+      "transient_ml_cap": 39.0
+    },
+    "v4_physical_context": {
+      "velocity_interpretation": "VFD_RAW_NO_CONFIRMADA",
+      "flow_l_min_confirmed": false,
+      "pressure_psi_confirmed": false,
+      "pump_physics_context_enabled": true,
+      "pump_physics_use_for_rules": false,
+      "pump_model": "Pedrollo PK 60",
+      "pump_nameplate_frequency_hz": 60.0,
+      "manual_main_red_valve": "ABIERTA",
+      "manual_blue_drain_valves_instrumented": false
+    },
+    "v4_protected_ml_training": {
+      "enabled": true,
+      "applied": true,
+      "trusted_cycle_count": 43,
+      "protected_phases": [
+        "ARRANQUE",
+        "DESACELERACION",
+        "OPERACION_ESTABLE"
+      ]
+    },
+    "v5_controlled_ground_truth": {
+      "enabled": true,
+      "catalog_file": "/mnt/data/work_v50/mantenimiento_predictivo_tanque_v5_0/data/controlled_trials_2026-10-08.json",
+      "exclude_session_from_training": true,
+      "exclude_session_from_baseline": true,
+      "records_in_controlled_sessions": 0,
+      "records_excluded_from_normal_training": 0,
+      "ground_truth_does_not_modify_scores": true,
+      "controlled_tests_are_real_failures": false
+    },
+    "v5_pressure_topology": {
+      "two_pressure_sensors_confirmed": true,
+      "sensor_bomba_location": "entre_bomba_y_valvula_superior_naranja",
+      "sensor_superior_location": "entre_valvula_azul_superior_y_tanque",
+      "pump_column_configured": null,
+      "tank_column_configured": null,
+      "differential_pressure_used_as_rule": false
     }
   }
 }
