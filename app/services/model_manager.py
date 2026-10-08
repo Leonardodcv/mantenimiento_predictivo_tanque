@@ -10,7 +10,7 @@ from typing import Any
 import pandas as pd
 
 from app.config import settings
-from app.services.anomaly_engine_v32 import (
+from app.services.anomaly_engine_v4 import (
     AnomalyEngine,
     MODEL_VERSION,
     build_cycles,
@@ -38,7 +38,7 @@ class ModelSnapshot:
 
 
 class ModelManager:
-    """Mantiene un snapshot explicito y un baseline de ciclo protegido/congelado."""
+    """Snapshot v4: baseline de ciclo congelado + segunda pasada ML protegida."""
 
     def __init__(self):
         self._lock = RLock()
@@ -47,18 +47,36 @@ class ModelManager:
     @staticmethod
     def _baseline_file(source: str) -> Path:
         safe_source = "".join(ch for ch in source.lower() if ch.isalnum() or ch in {"-", "_"})
+        return settings.cycle_baseline_dir_path / f"cycle_baseline_{safe_source}_v40.json"
+
+    @staticmethod
+    def _legacy_v32_baseline_file(source: str) -> Path:
+        safe_source = "".join(ch for ch in source.lower() if ch.isalnum() or ch in {"-", "_"})
         return settings.cycle_baseline_dir_path / f"cycle_baseline_{safe_source}_v32.json"
 
     def _load_cycle_baseline(self, source: str) -> dict[str, Any] | None:
         path = self._baseline_file(source)
+        migrated_from: Path | None = None
         if not path.exists():
-            return None
+            legacy = self._legacy_v32_baseline_file(source)
+            if legacy.exists():
+                migrated_from = legacy
+                path = legacy
+            else:
+                return None
         try:
             data = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             return None
         if not isinstance(data, dict) or not data.get("global"):
             return None
+        if migrated_from is not None:
+            # v4 conserva la referencia protegida ya validada en v3.2 en lugar de
+            # aprender de nuevo con datos recientes. Se guarda una copia v40.
+            migrated = dict(data)
+            migrated["migrated_from_file"] = migrated_from.name
+            migrated["model_version_migrated_to"] = MODEL_VERSION
+            data = self._save_cycle_baseline(source, migrated)
         return data
 
     def _save_cycle_baseline(self, source: str, reference: dict[str, Any]) -> dict[str, Any]:
@@ -72,9 +90,11 @@ class ModelManager:
         return payload
 
     def _delete_cycle_baseline(self, source: str) -> None:
-        path = self._baseline_file(source)
-        if path.exists():
-            path.unlink()
+        # reset explicito: elimina la referencia v4 y la v3.2 para evitar que
+        # la migracion automatica restaure inmediatamente el baseline antiguo.
+        for path in [self._baseline_file(source), self._legacy_v32_baseline_file(source)]:
+            if path.exists():
+                path.unlink()
 
     def rebuild(self, source: str, reset_cycle_baseline: bool = False) -> ModelSnapshot:
         source = source.strip().lower()
@@ -86,18 +106,38 @@ class ModelManager:
                 baseline_reference = self._load_cycle_baseline(source)
 
             raw = load_full(source)
-            engine = AnomalyEngine().fit(raw)
-            scored = engine.score(raw)
+
+            # Primera pasada: necesaria para reconstruir ciclos y aplicar el baseline protegido.
+            # Esta pasada NO es el modelo final cuando ML_PROTECTED_ACTIVE_TRAINING=true.
+            first_engine = AnomalyEngine().fit(raw)
+            first_scored = first_engine.score(raw)
 
             if baseline_reference is None:
-                # Primer rebuild v3.2: se construye un bootstrap robusto, se seleccionan
-                # ciclos confiables y se congela esa referencia. Los rebuild siguientes
-                # no incorporan automaticamente ciclos en cuarentena.
-                bootstrap_cycles = build_cycles(scored)
+                # Primer rebuild v4.0: bootstrap robusto y congelacion. Las futuras
+                # reconstrucciones no incorporan automaticamente ciclos en cuarentena.
+                bootstrap_cycles = build_cycles(first_scored)
                 baseline_reference = create_cycle_baseline_reference(bootstrap_cycles)
                 baseline_reference = self._save_cycle_baseline(source, baseline_reference)
 
-            cycles = build_cycles(scored, baseline_reference=baseline_reference)
+            first_cycles = build_cycles(first_scored, baseline_reference=baseline_reference)
+            trusted_cycle_ids = {
+                int(c["ciclo_id"])
+                for c in first_cycles
+                if c.get("estado_baseline") == "CONFIABLE_BASELINE"
+            }
+
+            if settings.ml_protected_active_training and trusted_cycle_ids:
+                # Segunda pasada v4.0: ARRANQUE/OPERACION_ESTABLE/DESACELERACION solo
+                # aprenden de ciclos confiables. Esto impide que NR/EP persistentes
+                # terminen normalizandose por repetidos rebuilds.
+                engine = AnomalyEngine().fit(raw, trusted_cycle_ids=trusted_cycle_ids)
+                scored = engine.score(raw)
+                cycles = build_cycles(scored, baseline_reference=baseline_reference)
+            else:
+                engine = first_engine
+                scored = first_scored
+                cycles = first_cycles
+
             snapshot = ModelSnapshot(
                 source=source,
                 built_at=datetime.now(timezone.utc),
@@ -187,6 +227,10 @@ class ModelManager:
     def new_regime_candidates(self, source: str) -> list[dict[str, Any]]:
         snapshot = self.get(source)
         return list(snapshot.cycle_baseline.get("nuevos_regimenes_candidatos", []))
+
+    def new_regime_families(self, source: str) -> list[dict[str, Any]]:
+        snapshot = self.get(source)
+        return list(snapshot.cycle_baseline.get("familias_regimen_candidatas", []))
 
 
 model_manager = ModelManager()

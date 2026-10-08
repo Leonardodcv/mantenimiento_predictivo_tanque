@@ -7,18 +7,20 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.services.anomaly_engine_v32 import MODEL_VERSION, dataframe_records
+from app.services.anomaly_engine_v4 import MODEL_VERSION, dataframe_records
 from app.services.data_source import DataSourceError, sqlserver_metadata
 from app.services.model_manager import model_manager
+from app.services.equipment_context import EQUIPMENT_CONTEXT, pump_expected_head_from_nameplate
 
 
 app = FastAPI(
     title=settings.app_name,
-    version="3.2.0",
+    version="4.0.0",
     description=(
-        "Backend v3.2 para mantenimiento predictivo del tanque. Protege y congela el baseline "
-        "de ciclos, pone desviaciones en cuarentena, detecta nuevos regimenes candidatos, "
-        "usa pisos fisicos en la explicabilidad y separa ciclos parciales por nivel inicial."
+        "Backend v4.0 para mantenimiento predictivo del tanque. Agrega contexto fisico del banco, "
+        "protege tambien el entrenamiento ML activo, agrupa episodios en familias de regimen, "
+        "trata velocidad del VFD como RAW hasta confirmar escalado y usa la bomba PK60 solo como "
+        "referencia teorica no causal."
     ),
 )
 
@@ -30,7 +32,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-API_VERSION = "3.2.0"
+API_VERSION = "4.0.0"
 SOURCE_PATTERN = "^(file|sqlserver)$"
 EVENT_SCOPE_PATTERN = "^(recent|full)$"
 
@@ -72,6 +74,20 @@ def _cols_for_frontend(df: pd.DataFrame) -> list[str]:
         "metodo_explicacion_ml",
         "explicacion_ml_es_causal",
         "variables_mas_atipicas",
+        "modo_operacion_contextual",
+        "estado_proceso_contextual",
+        "estado_proceso_fuente",
+        "frecuencia_contexto_hz",
+        "fuente_frecuencia_contexto",
+        "velocidad_vfd_raw",
+        "velocidad_rpm_confirmada",
+        "velocidad_unidad",
+        "ratio_presion_flujo",
+        "altura_bomba_teorica_aprox_m",
+        "presion_bomba_teorica_aprox_psi",
+        "residuo_presion_vs_modelo_teorico_psi",
+        "modelo_bomba_fisico_aplicable",
+        "modelo_bomba_fisico_solo_contexto",
         "flujo_instantaneo",
         "presion_relativa",
         "temperatura_tanque",
@@ -130,7 +146,7 @@ def _snapshot(source: str):
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
-@app.get("/api/v3/health/")
+@app.get("/api/v4/health/")
 def health():
     return {
         "status": "ok",
@@ -149,16 +165,21 @@ def health():
         "detects_new_regime_candidates": True,
         "uses_physical_floor_for_explanations": True,
         "detects_partial_cycles_by_initial_level": True,
+        "uses_protected_active_ml_training": settings.ml_protected_active_training,
+        "groups_regime_episodes_into_families": True,
+        "includes_equipment_context_from_photos_and_tia": True,
+        "vfd_velocity_is_raw_until_scaling_confirmed": not settings.velocity_rpm_confirmed,
+        "pump_physics_is_diagnostic_only": not settings.pump_physics_use_for_rules,
         "warning": "El indice es anomalia/rareza, no probabilidad de falla.",
     }
 
 
-@app.get("/api/v3/model/status/")
+@app.get("/api/v4/model/status/")
 def model_status(source: str = Query(default=settings.data_source, pattern=SOURCE_PATTERN)):
     return model_manager.status(source)
 
 
-@app.post("/api/v3/model/rebuild/")
+@app.post("/api/v4/model/rebuild/")
 def model_rebuild(
     source: str = Query(default=settings.data_source, pattern=SOURCE_PATTERN),
     reset_cycle_baseline: bool = Query(default=False),
@@ -183,7 +204,7 @@ def model_rebuild(
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
 
-@app.get("/api/v3/anomalies/summary/")
+@app.get("/api/v4/anomalies/summary/")
 def anomaly_summary(source: str = Query(default=settings.data_source, pattern=SOURCE_PATTERN)):
     snap = _snapshot(source)
     return {
@@ -197,7 +218,7 @@ def anomaly_summary(source: str = Query(default=settings.data_source, pattern=SO
     }
 
 
-@app.get("/api/v3/anomalies/latest/")
+@app.get("/api/v4/anomalies/latest/")
 def anomaly_latest(
     source: str = Query(default=settings.data_source, pattern=SOURCE_PATTERN),
     limit: int = Query(default=settings.default_limit, ge=1, le=10000),
@@ -217,7 +238,7 @@ def anomaly_latest(
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
 
-@app.get("/api/v3/anomalies/history/")
+@app.get("/api/v4/anomalies/history/")
 def anomaly_history(
     source: str = Query(default=settings.data_source, pattern=SOURCE_PATTERN),
     desde: datetime | None = Query(default=None),
@@ -241,7 +262,7 @@ def anomaly_history(
     }
 
 
-@app.get("/api/v3/anomalies/explain/{record_id}")
+@app.get("/api/v4/anomalies/explain/{record_id}")
 def anomaly_explain(
     record_id: int,
     source: str = Query(default=settings.data_source, pattern=SOURCE_PATTERN),
@@ -261,13 +282,13 @@ def anomaly_explain(
         "record": dataframe_records(row[cols])[0],
         "explanation_note": (
             "variables_mas_atipicas es una explicacion heuristica contra el baseline robusto "
-            "del regimen usando una escala minima fisica cuando la dispersion estadistica "
+            "del regimen de origen usando una escala minima fisica cuando la dispersion estadistica "
             "colapsa; no es una atribucion causal exacta del Isolation Forest."
         ),
     }
 
 
-@app.get("/api/v3/anomalies/events/")
+@app.get("/api/v4/anomalies/events/")
 def anomaly_events(
     source: str = Query(default=settings.data_source, pattern=SOURCE_PATTERN),
     threshold: float = Query(default=settings.event_open_threshold, ge=0.0, le=100.0),
@@ -307,7 +328,7 @@ def anomaly_events(
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
 
-@app.get("/api/v3/cycles/latest/")
+@app.get("/api/v4/cycles/latest/")
 def cycles_latest(
     source: str = Query(default=settings.data_source, pattern=SOURCE_PATTERN),
     limit: int = Query(default=settings.cycle_default_limit, ge=1, le=200),
@@ -328,7 +349,7 @@ def cycles_latest(
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
 
-@app.get("/api/v3/cycles/baseline/")
+@app.get("/api/v4/cycles/baseline/")
 def cycles_baseline(source: str = Query(default=settings.data_source, pattern=SOURCE_PATTERN)):
     snap = _snapshot(source)
     return {
@@ -339,7 +360,7 @@ def cycles_baseline(source: str = Query(default=settings.data_source, pattern=SO
     }
 
 
-@app.get("/api/v3/cycles/regime-candidates/")
+@app.get("/api/v4/cycles/regime-candidates/")
 def cycles_regime_candidates(
     source: str = Query(default=settings.data_source, pattern=SOURCE_PATTERN),
 ):
@@ -352,13 +373,60 @@ def cycles_regime_candidates(
         "count": len(candidates),
         "regime_candidates": candidates,
         "note": (
-            "Un nuevo_regimen_candidato permanece en cuarentena: no se incorpora al baseline "
-            "congelado hasta que se regenere explicitamente con reset_cycle_baseline=true."
+            "Cada entrada representa un episodio persistente en cuarentena. v4 puede agrupar "
+            "episodios separados con la misma firma dentro de una familia de regimen."
         ),
     }
 
 
-@app.get("/api/v3/variables/status/")
+@app.get("/api/v4/cycles/regime-families/")
+def cycles_regime_families(
+    source: str = Query(default=settings.data_source, pattern=SOURCE_PATTERN),
+):
+    snap = _snapshot(source)
+    families = model_manager.new_regime_families(source)
+    return {
+        "model_version": MODEL_VERSION,
+        "source": source,
+        "snapshot_built_at": snap.built_at.isoformat(),
+        "count": len(families),
+        "regime_families": families,
+        "note": (
+            "Una familia agrupa episodios separados con la misma firma. "
+            "CAMBIO_PUNTO_OPERACION_HIDRAULICO es una interpretacion fisica candidata, no una falla confirmada."
+        ),
+    }
+
+
+@app.get("/api/v4/context/equipment/")
+def equipment_context():
+    return {
+        "model_version": MODEL_VERSION,
+        "context": EQUIPMENT_CONTEXT,
+        "warning": (
+            "Los estados de las valvulas manuales no se registran en SQL y los escalados finales "
+            "de flujo, presion y velocidad VFD aun deben confirmarse con exportaciones TIA/Modbus."
+        ),
+    }
+
+
+@app.get("/api/v4/context/pump-reference/")
+def pump_reference(
+    flow_l_min: float = Query(ge=0.0),
+    frequency_hz: float = Query(gt=0.0, le=100.0),
+):
+    return {
+        "model_version": MODEL_VERSION,
+        "input": {"flow_l_min": flow_l_min, "frequency_hz": frequency_hz},
+        "reference": pump_expected_head_from_nameplate(flow_l_min, frequency_hz),
+        "warning": (
+            "Referencia aproximada basada solo en extremos de placa PK60 y leyes de afinidad. "
+            "No compensa perdidas ni ubicacion del transmisor y no genera reglas de falla."
+        ),
+    }
+
+
+@app.get("/api/v4/variables/status/")
 def variables_status(source: str = Query(default=settings.data_source, pattern=SOURCE_PATTERN)):
     snap = _snapshot(source)
     return {

@@ -1,0 +1,10 @@
+# Agregar opcionalmente al .env real. Todos tienen valores por defecto si se omiten.
+APP_NAME=Mantenimiento Predictivo Tanque API v4.0
+
+VELOCITY_RPM_CONFIRMED=false
+FLOW_UNIT_L_MIN_CONFIRMED=false
+PRESSURE_UNIT_PSI_CONFIRMED=false
+PUMP_PHYSICS_CONTEXT_ENABLED=true
+PUMP_PHYSICS_USE_FOR_RULES=false
+ML_PROTECTED_ACTIVE_TRAINING=true
+REGIME_FAMILY_ENABLED=true

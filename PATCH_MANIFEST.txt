@@ -1,0 +1,10 @@
+app/config.py
+app/main.py
+app/services/anomaly_engine.py
+app/services/anomaly_engine_v4.py
+app/services/equipment_context.py
+app/services/model_manager.py
+tests/test_engine_v4.py
+CHANGELOG_V4_0.md
+README_V4_0.md
+ENV_V4_NUEVAS_VARIABLES.txt

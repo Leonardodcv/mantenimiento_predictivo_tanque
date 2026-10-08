@@ -33,7 +33,7 @@ def _env_bool(name: str, default: bool = False) -> bool:
 
 @dataclass(frozen=True)
 class Settings:
-    app_name: str = os.getenv("APP_NAME", "Mantenimiento Predictivo Tanque API v3.2")
+    app_name: str = os.getenv("APP_NAME", "Mantenimiento Predictivo Tanque API v4.0")
     app_env: str = os.getenv("APP_ENV", "development")
     host: str = os.getenv("APP_HOST", "0.0.0.0")
     port: int = _env_int("APP_PORT", 8002)
@@ -174,6 +174,24 @@ class Settings:
     cycle_partial_max_duration_seconds: float = _env_float(
         "CYCLE_PARTIAL_MAX_DURATION_SECONDS", 60.0
     )
+
+
+    # v4.0: contexto fisico y entrenamiento ML protegido.
+    # La velocidad del VFD se conserva como RAW hasta confirmar su escalado en TIA/Modbus.
+    velocity_rpm_confirmed: bool = _env_bool("VELOCITY_RPM_CONFIRMED", False)
+    flow_unit_l_min_confirmed: bool = _env_bool("FLOW_UNIT_L_MIN_CONFIRMED", False)
+    pressure_unit_psi_confirmed: bool = _env_bool("PRESSURE_UNIT_PSI_CONFIRMED", False)
+    pump_physics_context_enabled: bool = _env_bool("PUMP_PHYSICS_CONTEXT_ENABLED", True)
+    pump_physics_use_for_rules: bool = _env_bool("PUMP_PHYSICS_USE_FOR_RULES", False)
+
+    # Segunda pasada de entrenamiento: las fases activas aprenden solo de ciclos
+    # que el baseline protegido considero confiables. Evita que un regimen nuevo
+    # persistente termine normalizandose en Isolation Forest tras varios rebuilds.
+    ml_protected_active_training: bool = _env_bool("ML_PROTECTED_ACTIVE_TRAINING", True)
+
+    # v4.0: familia de regimenes. Episodios separados con la misma firma se agrupan
+    # bajo una misma familia (por ejemplo flujo alto + presion baja).
+    regime_family_enabled: bool = _env_bool("REGIME_FAMILY_ENABLED", True)
 
     # SQL Server.
     sql_driver: str = os.getenv("SQL_DRIVER", "ODBC Driver 17 for SQL Server")
