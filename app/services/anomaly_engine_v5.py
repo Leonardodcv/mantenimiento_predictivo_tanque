@@ -14,7 +14,7 @@ from app.services.equipment_context import EQUIPMENT_CONTEXT, hydraulic_point_co
 from app.services.controlled_trials import annotate_controlled_trials, controlled_trials_context_summary
 
 
-MODEL_VERSION = "v5.0-controlled-ground-truth-hydraulic-topology"
+MODEL_VERSION = "v5.0.1-controlled-ground-truth-single-active-pressure-channel"
 
 REST_FEATURES = [
     "flujo_instantaneo",
@@ -376,38 +376,32 @@ class AnomalyEngine:
         return result
 
     def _add_v5_pressure_topology_context(self, out: pd.DataFrame) -> pd.DataFrame:
-        """Expone dos puntos de presion cuando sus columnas sean configuradas.
+        """Expone solo el canal de presion realmente disponible en la demo actual.
 
-        El dataset actual solo contiene `presion_relativa`; por eso no se fuerza un
-        mapeo fisico. Cuando se configure una columna para cada sensor, v5 calcula
-        el diferencial como contexto diagnostico, sin convertirlo automaticamente
-        en regla de falla.
+        `presion_relativa` esta confirmado como el sensor superior ubicado entre la
+        valvula azul superior y el tanque. El sensor cercano a la bomba existe, pero
+        depende de un PLC secundario que actualmente no transmite datos; por eso se
+        documenta como NO_DISPONIBLE y no participa en calculos ni reglas.
         """
         result = out.copy()
-        pump_col = settings.pressure_sensor_pump_column
-        tank_col = settings.pressure_sensor_tank_column
-        pump_available = bool(pump_col and pump_col in result.columns)
-        tank_available = bool(tank_col and tank_col in result.columns)
+        upper_col = "presion_relativa"
+        upper_available = upper_col in result.columns
 
-        result["sensor_presion_bomba_columna"] = pump_col or None
-        result["sensor_presion_superior_columna"] = tank_col or None
-        result["presion_doble_canal_disponible"] = bool(pump_available and tank_available)
+        result["sensor_presion_superior_columna"] = upper_col if upper_available else None
+        result["sensor_presion_superior_estado"] = "DISPONIBLE" if upper_available else "NO_DISPONIBLE"
+        result["sensor_presion_superior_fuente_plc"] = "PLC_PRINCIPAL"
+        result["presion_sensor_superior"] = (
+            pd.to_numeric(result[upper_col], errors="coerce") if upper_available else np.nan
+        )
 
-        if pump_available:
-            result["presion_sensor_bomba"] = pd.to_numeric(result[pump_col], errors="coerce")
-        else:
-            result["presion_sensor_bomba"] = np.nan
-        if tank_available:
-            result["presion_sensor_superior"] = pd.to_numeric(result[tank_col], errors="coerce")
-        else:
-            result["presion_sensor_superior"] = np.nan
+        result["sensor_presion_bomba_columna"] = None
+        result["sensor_presion_bomba_estado"] = "NO_DISPONIBLE"
+        result["sensor_presion_bomba_fuente_plc"] = "PLC_SECUNDARIO"
+        result["sensor_presion_bomba_motivo_no_disponible"] = "PLC_SECUNDARIO_NO_TRANSMITE_DATOS_ACTUALMENTE"
+        result["presion_sensor_bomba"] = np.nan
 
-        if pump_available and tank_available:
-            result["delta_presion_bomba_a_superior"] = (
-                result["presion_sensor_bomba"] - result["presion_sensor_superior"]
-            )
-        else:
-            result["delta_presion_bomba_a_superior"] = np.nan
+        result["presion_doble_canal_disponible"] = False
+        result["delta_presion_bomba_a_superior"] = np.nan
         return result
 
     def _derive_temporal_context(self, df: pd.DataFrame) -> dict[str, list[Any]]:
@@ -784,11 +778,17 @@ class AnomalyEngine:
                 "controlled_tests_are_real_failures": False,
             },
             "v5_pressure_topology": {
-                "two_pressure_sensors_confirmed": True,
-                "sensor_bomba_location": "entre_bomba_y_valvula_superior_naranja",
+                "two_pressure_sensors_physically_confirmed": True,
+                "active_pressure_channels": 1,
                 "sensor_superior_location": "entre_valvula_azul_superior_y_tanque",
-                "pump_column_configured": settings.pressure_sensor_pump_column or None,
-                "tank_column_configured": settings.pressure_sensor_tank_column or None,
+                "sensor_superior_database_column": "presion_relativa",
+                "sensor_superior_available": True,
+                "sensor_superior_source_plc": "PLC_PRINCIPAL",
+                "sensor_bomba_location": "entre_bomba_y_valvula_superior_naranja",
+                "sensor_bomba_available": False,
+                "sensor_bomba_source_plc": "PLC_SECUNDARIO",
+                "sensor_bomba_unavailable_reason": "PLC_SECUNDARIO_NO_TRANSMITE_DATOS_ACTUALMENTE",
+                "differential_pressure_available": False,
                 "differential_pressure_used_as_rule": False,
             },
         }

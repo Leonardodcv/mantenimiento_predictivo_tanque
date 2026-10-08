@@ -1,7 +1,7 @@
 {
-  "model_version": "v5.0-controlled-ground-truth-hydraulic-topology",
+  "model_version": "v5.0.1-controlled-ground-truth-single-active-pressure-channel",
   "context": {
-    "context_version": "2026-10-08-controlled-tests-hydraulic-topology-2",
+    "context_version": "2026-10-08-controlled-tests-single-active-pressure-channel-3",
     "scope": "tanque_hidraulico",
     "project_boundary": {
       "includes": [
@@ -45,7 +45,7 @@
       "physics_model": {
         "method": "linearizacion_extremos_placa_mas_leyes_afinidad",
         "diagnostic_only": true,
-        "reason": "La placa aporta extremos Q/H, no la curva completa. La instalacion y la ubicacion exacta de las dos tomas de presion aun no estan incorporadas a un modelo de perdidas."
+        "reason": "La placa aporta extremos Q/H, no la curva completa. Las ubicaciones fisicas de los sensores estan documentadas, pero solo el sensor superior transmite al backend actualmente; por ello la referencia no representa una medicion diferencial ni una presion directa de descarga."
       }
     },
     "sensors": {
@@ -68,7 +68,8 @@
         "configured_range_confirmed": false
       },
       "pressure": {
-        "count_confirmed": 2,
+        "physical_sensor_count_confirmed": 2,
+        "active_data_channel_count": 1,
         "source": "fotografia_y_confirmacion_usuario",
         "family_model": "Endress+Hauser Cerabar M PMP51",
         "signal": "4-20 mA HART",
@@ -86,20 +87,31 @@
           "sensor_superior": {
             "location": "entre_valvula_azul_superior_y_tanque",
             "role": "presion_hacia_tanque_despues_de_restriccion_superior",
-            "database_column_confirmed": false
+            "data_available": true,
+            "source_plc": "PLC_PRINCIPAL",
+            "database_column": "presion_relativa",
+            "database_column_confirmed": true,
+            "use_in_current_model": true
           },
           "sensor_bomba": {
             "location": "entre_bomba_y_valvula_superior_naranja",
             "role": "presion_cercana_a_descarga_de_bomba_antes_de_valvula_superior_naranja",
+            "data_available": false,
+            "source_plc": "PLC_SECUNDARIO",
+            "database_column": null,
             "database_column_confirmed": false,
-            "note": "Es el sensor previamente descrito por el usuario."
+            "use_in_current_model": false,
+            "unavailable_reason": "PLC_SECUNDARIO_NO_TRANSMITE_DATOS_ACTUALMENTE",
+            "note": "El sensor existe fisicamente y tiene datos en su PLC, pero el PLC secundario no los esta enviando al sistema de adquisicion. Se excluye del analisis hasta restablecer la transmision."
           }
         },
         "database_mapping": {
-          "available_current_column": "presion_relativa",
-          "physical_sensor_mapping_confirmed": false,
-          "second_numeric_channel_available_in_provided_dataset": false,
-          "note": "El dataset proporcionado contiene una sola columna de presion. v5 conserva la topologia de dos sensores, pero no calcula delta de presion hasta disponer de ambas senales."
+          "primary_pressure_column": "presion_relativa",
+          "primary_pressure_sensor": "sensor_superior",
+          "physical_sensor_mapping_confirmed": true,
+          "pump_pressure_channel_available": false,
+          "differential_pressure_available": false,
+          "note": "presion_relativa corresponde al sensor superior. El sensor cercano a la bomba queda documentado pero fuera del modelo porque su PLC no transmite datos actualmente."
         }
       },
       "flow": {
@@ -160,6 +172,10 @@
         "valvula_tanque -> tanque_inferior (recirculacion_corta)",
         "valvula_roja_principal -> habilita paso principal bomba-hacia-tanque"
       ],
+      "active_pressure_path": "valvula_azul_superior -> sensor_superior -> tanque",
+      "primary_pressure_database_column": "presion_relativa",
+      "pump_pressure_sensor_documented_but_excluded": true,
+      "pump_pressure_exclusion_reason": "PLC_SECUNDARIO_NO_TRANSMITE_DATOS_ACTUALMENTE",
       "differential_pressure_possible_when_both_channels_are_available": true,
       "differential_pressure_currently_available": false
     },
@@ -200,5 +216,6 @@
       "pressure_psi_confirmed": false,
       "note": "El modelo fisico de bomba usa provisionalmente las magnitudes de flujo/presion como contexto, pero no las convierte en reglas de falla hasta confirmar escalados TIA."
     }
-  }
+  },
+  "warning": "Actualmente solo el sensor superior esta disponible y corresponde a presion_relativa. El sensor cercano a la bomba depende del PLC secundario y no se usa en el analisis."
 }

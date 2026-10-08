@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 
-EQUIPMENT_CONTEXT_VERSION = "2026-10-08-controlled-tests-hydraulic-topology-2"
+EQUIPMENT_CONTEXT_VERSION = "2026-10-08-controlled-tests-single-active-pressure-channel-3"
 M_H2O_TO_PSI = 1.4223343308
 
 
@@ -36,8 +36,9 @@ EQUIPMENT_CONTEXT: dict[str, Any] = {
             "method": "linearizacion_extremos_placa_mas_leyes_afinidad",
             "diagnostic_only": True,
             "reason": (
-                "La placa aporta extremos Q/H, no la curva completa. La instalacion y la ubicacion "
-                "exacta de las dos tomas de presion aun no estan incorporadas a un modelo de perdidas."
+                "La placa aporta extremos Q/H, no la curva completa. Las ubicaciones fisicas de los sensores "
+                "estan documentadas, pero solo el sensor superior transmite al backend actualmente; por ello "
+                "la referencia no representa una medicion diferencial ni una presion directa de descarga."
             ),
         },
     },
@@ -58,7 +59,8 @@ EQUIPMENT_CONTEXT: dict[str, Any] = {
             "configured_range_confirmed": False,
         },
         "pressure": {
-            "count_confirmed": 2,
+            "physical_sensor_count_confirmed": 2,
+            "active_data_channel_count": 1,
             "source": "fotografia_y_confirmacion_usuario",
             "family_model": "Endress+Hauser Cerabar M PMP51",
             "signal": "4-20 mA HART",
@@ -70,22 +72,36 @@ EQUIPMENT_CONTEXT: dict[str, Any] = {
                 "sensor_superior": {
                     "location": "entre_valvula_azul_superior_y_tanque",
                     "role": "presion_hacia_tanque_despues_de_restriccion_superior",
-                    "database_column_confirmed": False,
+                    "data_available": True,
+                    "source_plc": "PLC_PRINCIPAL",
+                    "database_column": "presion_relativa",
+                    "database_column_confirmed": True,
+                    "use_in_current_model": True,
                 },
                 "sensor_bomba": {
                     "location": "entre_bomba_y_valvula_superior_naranja",
                     "role": "presion_cercana_a_descarga_de_bomba_antes_de_valvula_superior_naranja",
+                    "data_available": False,
+                    "source_plc": "PLC_SECUNDARIO",
+                    "database_column": None,
                     "database_column_confirmed": False,
-                    "note": "Es el sensor previamente descrito por el usuario.",
+                    "use_in_current_model": False,
+                    "unavailable_reason": "PLC_SECUNDARIO_NO_TRANSMITE_DATOS_ACTUALMENTE",
+                    "note": (
+                        "El sensor existe fisicamente y tiene datos en su PLC, pero el PLC secundario no los "
+                        "esta enviando al sistema de adquisicion. Se excluye del analisis hasta restablecer la transmision."
+                    ),
                 },
             },
             "database_mapping": {
-                "available_current_column": "presion_relativa",
-                "physical_sensor_mapping_confirmed": False,
-                "second_numeric_channel_available_in_provided_dataset": False,
+                "primary_pressure_column": "presion_relativa",
+                "primary_pressure_sensor": "sensor_superior",
+                "physical_sensor_mapping_confirmed": True,
+                "pump_pressure_channel_available": False,
+                "differential_pressure_available": False,
                 "note": (
-                    "El dataset proporcionado contiene una sola columna de presion. v5 conserva la "
-                    "topologia de dos sensores, pero no calcula delta de presion hasta disponer de ambas senales."
+                    "presion_relativa corresponde al sensor superior. El sensor cercano a la bomba queda documentado "
+                    "pero fuera del modelo porque su PLC no transmite datos actualmente."
                 ),
             },
         },
@@ -153,6 +169,10 @@ EQUIPMENT_CONTEXT: dict[str, Any] = {
             "valvula_tanque -> tanque_inferior (recirculacion_corta)",
             "valvula_roja_principal -> habilita paso principal bomba-hacia-tanque",
         ],
+        "active_pressure_path": "valvula_azul_superior -> sensor_superior -> tanque",
+        "primary_pressure_database_column": "presion_relativa",
+        "pump_pressure_sensor_documented_but_excluded": True,
+        "pump_pressure_exclusion_reason": "PLC_SECUNDARIO_NO_TRANSMITE_DATOS_ACTUALMENTE",
         "differential_pressure_possible_when_both_channels_are_available": True,
         "differential_pressure_currently_available": False,
     },

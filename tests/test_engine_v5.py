@@ -39,13 +39,32 @@ def _raw_row(ts, *, speed=1198, flow=18.2, pressure=8.6, level=50.0):
     }
 
 
-def test_v5_equipment_context_has_two_pressure_locations_and_test_valves():
+def test_v5_equipment_context_uses_only_upper_pressure_channel_currently():
     pressure = EQUIPMENT_CONTEXT["sensors"]["pressure"]
-    assert pressure["count_confirmed"] == 2
+    assert pressure["physical_sensor_count_confirmed"] == 2
+    assert pressure["active_data_channel_count"] == 1
     assert pressure["sensors"]["sensor_superior"]["location"] == "entre_valvula_azul_superior_y_tanque"
+    assert pressure["sensors"]["sensor_superior"]["database_column"] == "presion_relativa"
+    assert pressure["sensors"]["sensor_superior"]["data_available"] is True
     assert pressure["sensors"]["sensor_bomba"]["location"] == "entre_bomba_y_valvula_superior_naranja"
+    assert pressure["sensors"]["sensor_bomba"]["data_available"] is False
+    assert pressure["sensors"]["sensor_bomba"]["use_in_current_model"] is False
+    assert pressure["database_mapping"]["differential_pressure_available"] is False
     assert EQUIPMENT_CONTEXT["manual_valves"]["upper_blue"]["used_to_induce_cavitation_reported"] is True
     assert EQUIPMENT_CONTEXT["manual_valves"]["tank_valve"]["hydraulic_effect"] == "recirculacion_corta"
+
+
+def test_v5_pressure_context_maps_presion_relativa_to_upper_sensor_only():
+    engine = AnomalyEngine()
+    out = engine._add_v5_pressure_topology_context(pd.DataFrame({"presion_relativa": [8.25]}))
+    row = out.iloc[0]
+    assert row["sensor_presion_superior_columna"] == "presion_relativa"
+    assert row["sensor_presion_superior_estado"] == "DISPONIBLE"
+    assert row["presion_sensor_superior"] == 8.25
+    assert row["sensor_presion_bomba_estado"] == "NO_DISPONIBLE"
+    assert pd.isna(row["presion_sensor_bomba"])
+    assert bool(row["presion_doble_canal_disponible"]) is False
+    assert pd.isna(row["delta_presion_bomba_a_superior"])
 
 
 def test_v5_catalog_preserves_minute_precision_and_no_assumed_recovery():
@@ -186,6 +205,10 @@ def test_v5_validation_compares_detector_without_turning_test_into_failure():
     row = next(x for x in validation["results"] if x["id"] == "CT-0846")
     assert row["validation_status"] == "RESPUESTA_DETECTADA_EN_VENTANA"
     assert row["detected_anomaly"] is True
+    assert row["presion_fuente_sensor"] == "SENSOR_SUPERIOR"
+    assert row["presion_sensor_bomba_disponible"] is False
+    assert validation["pressure_validation_scope"]["database_column"] == "presion_relativa"
+    assert validation["pressure_validation_scope"]["pump_sensor_available"] is False
     assert validation["ground_truth_policy"].startswith("Las etiquetas solo validan")
 
 

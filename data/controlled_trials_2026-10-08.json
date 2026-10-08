@@ -1,5 +1,5 @@
 {
-  "catalog_version": "v5.0-2026-10-08-minute-ground-truth",
+  "catalog_version": "v5.0.1-2026-10-08-minute-ground-truth-single-pressure-channel",
   "time_basis": "SQL_LOCAL_NAIVE",
   "principles": {
     "annotations_are_ground_truth_for_validation": true,
@@ -56,7 +56,10 @@
       "category": "PRUEBA_HIDRAULICA",
       "expected_evaluation": "ANOMALIA_HIDRAULICA",
       "description": "Cavitacion reportada durante recirculacion; cambio de presion mediante valvulas.",
-      "manipulations": ["CIERRE_VALVULA_AZUL_SUPERIOR", "CIERRE_VALVULA_TANQUE"],
+      "manipulations": [
+        "CIERRE_VALVULA_AZUL_SUPERIOR",
+        "CIERRE_VALVULA_TANQUE"
+      ],
       "use_for_validation": true,
       "physical_confirmation": "REPORTADA_NO_CONFIRMADA_POR_SENSOR_ESPECIFICO"
     },
@@ -144,7 +147,9 @@
       "category": "PRUEBA_HIDRAULICA",
       "expected_evaluation": "CAMBIO_REGIMEN",
       "description": "Prueba con la valvula roja principal para verificar disponibilidad de flujo.",
-      "manipulations": ["VALVULA_ROJA_PRINCIPAL"],
+      "manipulations": [
+        "VALVULA_ROJA_PRINCIPAL"
+      ],
       "use_for_validation": true
     },
     {
@@ -157,7 +162,9 @@
       "category": "PRUEBA_HIDRAULICA",
       "expected_evaluation": "CAMBIO_REGIMEN",
       "description": "Valvula de tanque abierta; la valvula deriva el flujo al tanque inferior para recirculacion corta. Se observo el comportamiento del nivel.",
-      "manipulations": ["APERTURA_VALVULA_TANQUE"],
+      "manipulations": [
+        "APERTURA_VALVULA_TANQUE"
+      ],
       "use_for_validation": true
     },
     {
@@ -182,7 +189,10 @@
       "category": "PRUEBA_HIDRAULICA",
       "expected_evaluation": "ANOMALIA_HIDRAULICA",
       "description": "Prueba brusca de cavitacion reportada; flujo cambiante de mucho a muy poco.",
-      "manipulations": ["CIERRE_VALVULA_AZUL_SUPERIOR", "CIERRE_VALVULA_TANQUE"],
+      "manipulations": [
+        "CIERRE_VALVULA_AZUL_SUPERIOR",
+        "CIERRE_VALVULA_TANQUE"
+      ],
       "use_for_validation": true,
       "physical_confirmation": "REPORTADA_NO_CONFIRMADA_POR_SENSOR_ESPECIFICO"
     },
@@ -271,7 +281,9 @@
       "category": "PRUEBA_HIDRAULICA",
       "expected_evaluation": "ANOMALIA_HIDRAULICA",
       "description": "Valvula roja principal/superior cerrada segun bitacora.",
-      "manipulations": ["CIERRE_VALVULA_ROJA_PRINCIPAL"],
+      "manipulations": [
+        "CIERRE_VALVULA_ROJA_PRINCIPAL"
+      ],
       "use_for_validation": true
     },
     {
@@ -360,7 +372,9 @@
       "category": "CAMBIO_REGIMEN_CONTROLADO",
       "expected_evaluation": "CAMBIO_REGIMEN",
       "description": "Recirculacion en tuberia interna/corta hacia el tanque inferior.",
-      "manipulations": ["VALVULA_TANQUE"],
+      "manipulations": [
+        "VALVULA_TANQUE"
+      ],
       "use_for_validation": true
     },
     {
@@ -375,5 +389,16 @@
       "description": "Pruebas adicionales sin relacion con las pruebas planeadas; estado de reposo.",
       "use_for_validation": false
     }
-  ]
+  ],
+  "measurement_scope": {
+    "pressure_active_sensor": "SENSOR_SUPERIOR",
+    "pressure_database_column": "presion_relativa",
+    "pressure_active_sensor_location": "entre_valvula_azul_superior_y_tanque",
+    "pump_pressure_sensor_exists_physically": true,
+    "pump_pressure_sensor_available_to_backend": false,
+    "pump_pressure_sensor_source_plc": "PLC_SECUNDARIO",
+    "pump_pressure_sensor_unavailable_reason": "PLC_SECUNDARIO_NO_TRANSMITE_DATOS_ACTUALMENTE",
+    "differential_pressure_available": false,
+    "note": "Las notas de bitacora sobre ambos sensores se conservan como observacion humana; la validacion numerica actual usa solo presion_relativa del sensor superior."
+  }
 }

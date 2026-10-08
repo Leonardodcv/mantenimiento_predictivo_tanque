@@ -11,7 +11,7 @@ import pandas as pd
 from app.config import settings
 
 
-CONTROLLED_TRIALS_VERSION = "v5.0-minute-ground-truth-1"
+CONTROLLED_TRIALS_VERSION = "v5.0.1-minute-ground-truth-single-pressure-channel"
 
 
 @lru_cache(maxsize=1)
@@ -283,6 +283,9 @@ def validate_controlled_trials(
                 "flujo_max": _safe_metric(frame, "flujo_instantaneo", "max"),
                 "flujo_mediana": _safe_metric(frame, "flujo_instantaneo", "median"),
                 "flujo_std": _safe_metric(frame, "flujo_instantaneo", "std"),
+                "presion_fuente_sensor": "SENSOR_SUPERIOR",
+                "presion_fuente_columna": "presion_relativa",
+                "presion_sensor_bomba_disponible": False,
                 "presion_min": _safe_metric(frame, "presion_relativa", "min"),
                 "presion_max": _safe_metric(frame, "presion_relativa", "max"),
                 "presion_mediana": _safe_metric(frame, "presion_relativa", "median"),
@@ -313,6 +316,17 @@ def validate_controlled_trials(
             "Las etiquetas solo validan el detector y excluyen la sesion del aprendizaje normal; "
             "no modifican el indice de anomalia ni convierten una prueba en falla real."
         ),
+        "pressure_validation_scope": {
+            "active_sensor": "SENSOR_SUPERIOR",
+            "database_column": "presion_relativa",
+            "location": "entre_valvula_azul_superior_y_tanque",
+            "pump_sensor_available": False,
+            "pump_sensor_reason": "PLC_SECUNDARIO_NO_TRANSMITE_DATOS_ACTUALMENTE",
+            "note": (
+                "Las observaciones humanas que mencionan ambos sensores se conservan, pero la validacion "
+                "numerica actual solo puede comprobar el sensor superior."
+            ),
+        },
         "summary": {
             "annotations_total": len(results),
             "annotations_with_data": sum(r["records"] > 0 for r in results),

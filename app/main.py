@@ -16,12 +16,12 @@ from app.services.controlled_trials import load_controlled_trials_catalog
 
 app = FastAPI(
     title=settings.app_name,
-    version="5.0.0",
+    version="5.0.1",
     description=(
-        "Backend v5.0 para mantenimiento predictivo del tanque. Conserva el contexto fisico v4, "
+        "Backend v5.0.1 para mantenimiento predictivo del tanque. Conserva el contexto fisico v5.0, "
         "incorpora ground truth de pruebas controladas sin convertirlas en fallas reales, protege el entrenamiento ML, "
-        "modela la topologia de dos sensores de presion, mantiene velocidad VFD como RAW y usa la bomba PK60 solo como "
-        "referencia teorica no causal."
+        "documenta dos sensores fisicos pero usa un solo canal de presion activo (sensor superior), mantiene velocidad VFD como RAW "
+        "y usa la bomba PK60 solo como referencia teorica no causal."
     ),
 )
 
@@ -33,7 +33,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-API_VERSION = "5.0.0"
+API_VERSION = "5.0.1"
 SOURCE_PATTERN = "^(file|sqlserver)$"
 EVENT_SCOPE_PATTERN = "^(recent|full)$"
 
@@ -101,7 +101,12 @@ def _cols_for_frontend(df: pd.DataFrame) -> list[str]:
         "modelo_bomba_fisico_aplicable",
         "modelo_bomba_fisico_solo_contexto",
         "sensor_presion_bomba_columna",
+        "sensor_presion_bomba_estado",
+        "sensor_presion_bomba_fuente_plc",
+        "sensor_presion_bomba_motivo_no_disponible",
         "sensor_presion_superior_columna",
+        "sensor_presion_superior_estado",
+        "sensor_presion_superior_fuente_plc",
         "presion_doble_canal_disponible",
         "presion_sensor_bomba",
         "presion_sensor_superior",
@@ -190,7 +195,12 @@ def health():
         "controlled_tests_excluded_from_normal_training": settings.controlled_trials_exclude_session_from_training,
         "controlled_tests_are_not_real_failures": True,
         "two_pressure_sensor_topology_known": True,
-        "dual_pressure_columns_configured": bool(settings.pressure_sensor_pump_column and settings.pressure_sensor_tank_column),
+        "active_pressure_channels": 1,
+        "primary_pressure_sensor": "sensor_superior",
+        "primary_pressure_database_column": "presion_relativa",
+        "pump_pressure_sensor_available": False,
+        "pump_pressure_sensor_unavailable_reason": "PLC_SECUNDARIO_NO_TRANSMITE_DATOS_ACTUALMENTE",
+        "differential_pressure_available": False,
         "vfd_velocity_is_raw_until_scaling_confirmed": not settings.velocity_rpm_confirmed,
         "pump_physics_is_diagnostic_only": not settings.pump_physics_use_for_rules,
         "warning": "El indice es anomalia/rareza, no probabilidad de falla.",
@@ -427,9 +437,10 @@ def equipment_context():
         "model_version": MODEL_VERSION,
         "context": EQUIPMENT_CONTEXT,
         "warning": (
-            "La topologia de dos sensores de presion esta registrada, pero el dataset actual solo "
-            "expone una columna presion_relativa y no se fuerza su mapeo fisico. Los estados de las "
-            "valvulas manuales tampoco se registran en SQL."
+            "La topologia fisica contiene dos sensores de presion, pero actualmente solo el sensor superior "
+            "esta disponible para el backend y corresponde a presion_relativa. El sensor cercano a la bomba "
+            "depende de un PLC secundario que no transmite datos; no se usa para scoring ni delta de presion. "
+            "Los estados de las valvulas manuales tampoco se registran en SQL."
         ),
     }
 
@@ -492,7 +503,8 @@ def controlled_tests_validation(
             "validation": validation,
             "warning": (
                 "La bitacora se usa como ground truth externo. No modifica el indice del modelo y "
-                "ninguna prueba controlada se considera por si misma una falla real."
+                "ninguna prueba controlada se considera por si misma una falla real. La validacion numerica "
+                "de presion usa actualmente solo presion_relativa del sensor superior."
             ),
         }
     except DataSourceError as exc:

@@ -209,10 +209,9 @@ class Settings:
         "CONTROLLED_TRIALS_DETECTION_THRESHOLD", 70.0
     )
 
-    # v5.0: topologia de dos sensores de presion. Las columnas fisicas siguen
-    # configurables porque el dataset actual solo expone una columna `presion_relativa`.
-    pressure_sensor_pump_column: str = os.getenv("PRESSURE_SENSOR_PUMP_COLUMN", "").strip()
-    pressure_sensor_tank_column: str = os.getenv("PRESSURE_SENSOR_TANK_COLUMN", "").strip()
+    # v5.0.1: `presion_relativa` esta confirmado como el sensor superior.
+    # El sensor cercano a la bomba depende de un PLC secundario que actualmente
+    # no transmite datos; no se configura ni se usa hasta restablecer ese canal.
 
     # SQL Server.
     sql_driver: str = os.getenv("SQL_DRIVER", "ODBC Driver 17 for SQL Server")
